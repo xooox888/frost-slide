@@ -16,10 +16,12 @@
 		A10000000000000000000024 /* TrackPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000023 /* TrackPath.swift */; };
 		A10000000000000000000026 /* RacerSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000025 /* RacerSimulation.swift */; };
 		A10000000000000000000028 /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* GameEngine.swift */; };
-		A1000000000000000000002A /* SceneController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000029 /* SceneController.swift */; };
+		A1000000000000000000002A /* WorldController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000029 /* WorldController.swift */; };
 		A1000000000000000000002C /* PenguinFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002B /* PenguinFactory.swift */; };
 		A1000000000000000000002E /* WorldFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002D /* WorldFactory.swift */; };
 		A10000000000000000000030 /* EffectsFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000002F /* EffectsFactory.swift */; };
+		A10000000000000000000063 /* RKMesh.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000062 /* RKMesh.swift */; };
+		A10000000000000000000065 /* RKMaterials.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000064 /* RKMaterials.swift */; };
 		A10000000000000000000032 /* FrostTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000031 /* FrostTheme.swift */; };
 		A10000000000000000000034 /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000033 /* MainMenuView.swift */; };
 		A10000000000000000000036 /* LevelSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000035 /* LevelSelectView.swift */; };
@@ -28,7 +30,12 @@
 		A1000000000000000000003C /* PauseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003B /* PauseView.swift */; };
 		A1000000000000000000003E /* ResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003D /* ResultsView.swift */; };
 		A10000000000000000000040 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000003F /* SettingsView.swift */; };
+		A10000000000000000000056 /* AdConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000055 /* AdConfig.swift */; };
+		A10000000000000000000058 /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000057 /* AdManager.swift */; };
+		A1000000000000000000005A /* BannerAdView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000059 /* BannerAdView.swift */; };
 		A10000000000000000000042 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000041 /* Assets.xcassets */; };
+		A1000000000000000000005C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000005B /* PrivacyInfo.xcprivacy */; };
+		A10000000000000000000060 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000005F /* GoogleMobileAds */; };
 		A10000000000000000000046 /* collect.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000045 /* collect.wav */; };
 		A10000000000000000000048 /* boost.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000047 /* boost.wav */; };
 		A1000000000000000000004A /* crash.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000049 /* crash.wav */; };
@@ -49,10 +56,12 @@
 		A10000000000000000000023 /* TrackPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPath.swift; sourceTree = "<group>"; };
 		A10000000000000000000025 /* RacerSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacerSimulation.swift; sourceTree = "<group>"; };
 		A10000000000000000000027 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
-		A10000000000000000000029 /* SceneController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneController.swift; sourceTree = "<group>"; };
+		A10000000000000000000029 /* WorldController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldController.swift; sourceTree = "<group>"; };
 		A1000000000000000000002B /* PenguinFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PenguinFactory.swift; sourceTree = "<group>"; };
 		A1000000000000000000002D /* WorldFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldFactory.swift; sourceTree = "<group>"; };
 		A1000000000000000000002F /* EffectsFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsFactory.swift; sourceTree = "<group>"; };
+		A10000000000000000000062 /* RKMesh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RKMesh.swift; sourceTree = "<group>"; };
+		A10000000000000000000064 /* RKMaterials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RKMaterials.swift; sourceTree = "<group>"; };
 		A10000000000000000000031 /* FrostTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrostTheme.swift; sourceTree = "<group>"; };
 		A10000000000000000000033 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
 		A10000000000000000000035 /* LevelSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectView.swift; sourceTree = "<group>"; };
@@ -61,8 +70,12 @@
 		A1000000000000000000003B /* PauseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseView.swift; sourceTree = "<group>"; };
 		A1000000000000000000003D /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
 		A1000000000000000000003F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A10000000000000000000055 /* AdConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfig.swift; sourceTree = "<group>"; };
+		A10000000000000000000057 /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
+		A10000000000000000000059 /* BannerAdView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerAdView.swift; sourceTree = "<group>"; };
 		A10000000000000000000041 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1000000000000000000005B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A10000000000000000000045 /* collect.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = collect.wav; sourceTree = "<group>"; };
 		A10000000000000000000047 /* boost.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = boost.wav; sourceTree = "<group>"; };
 		A10000000000000000000049 /* crash.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = crash.wav; sourceTree = "<group>"; };
@@ -79,6 +92,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000060 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,11 +122,13 @@
 				A10000000000000000000009 /* App */,
 				A1000000000000000000000A /* Core */,
 				A1000000000000000000000B /* Engine */,
-				A1000000000000000000000C /* Scene */,
+				A1000000000000000000000C /* Reality */,
 				A1000000000000000000000D /* UI */,
+				A10000000000000000000061 /* Ads */,
 				A1000000000000000000000E /* Resources */,
 				A10000000000000000000041 /* Assets.xcassets */,
 				A10000000000000000000043 /* Info.plist */,
+				A1000000000000000000005B /* PrivacyInfo.xcprivacy */,
 			);
 			path = FrostSlide;
 			sourceTree = "<group>";
@@ -146,15 +162,17 @@
 			path = Engine;
 			sourceTree = "<group>";
 		};
-		A1000000000000000000000C /* Scene */ = {
+		A1000000000000000000000C /* Reality */ = {
 			isa = PBXGroup;
 			children = (
-				A10000000000000000000029 /* SceneController.swift */,
+				A10000000000000000000064 /* RKMaterials.swift */,
+				A10000000000000000000062 /* RKMesh.swift */,
+				A10000000000000000000029 /* WorldController.swift */,
 				A1000000000000000000002B /* PenguinFactory.swift */,
 				A1000000000000000000002D /* WorldFactory.swift */,
 				A1000000000000000000002F /* EffectsFactory.swift */,
 			);
-			path = Scene;
+			path = Reality;
 			sourceTree = "<group>";
 		};
 		A1000000000000000000000D /* UI */ = {
@@ -170,6 +188,16 @@
 				A1000000000000000000003F /* SettingsView.swift */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		A10000000000000000000061 /* Ads */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000055 /* AdConfig.swift */,
+				A10000000000000000000057 /* AdManager.swift */,
+				A10000000000000000000059 /* BannerAdView.swift */,
+			);
+			path = Ads;
 			sourceTree = "<group>";
 		};
 		A1000000000000000000000E /* Resources */ = {
@@ -211,6 +239,9 @@
 			dependencies = (
 			);
 			name = FrostSlide;
+			packageProductDependencies = (
+				A1000000000000000000005F /* GoogleMobileAds */,
+			);
 			productName = FrostSlide;
 			productReference = A10000000000000000000016 /* FrostSlide.app */;
 			productType = "com.apple.product-type.application";
@@ -239,6 +270,9 @@
 				Base,
 			);
 			mainGroup = A10000000000000000000006;
+			packageReferences = (
+				A1000000000000000000005E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			productRefGroup = A10000000000000000000007 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -254,6 +288,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000042 /* Assets.xcassets in Resources */,
+				A1000000000000000000005C /* PrivacyInfo.xcprivacy in Resources */,
 				A10000000000000000000046 /* collect.wav in Resources */,
 				A10000000000000000000048 /* boost.wav in Resources */,
 				A1000000000000000000004A /* crash.wav in Resources */,
@@ -281,7 +316,9 @@
 				A10000000000000000000024 /* TrackPath.swift in Sources */,
 				A10000000000000000000026 /* RacerSimulation.swift in Sources */,
 				A10000000000000000000028 /* GameEngine.swift in Sources */,
-				A1000000000000000000002A /* SceneController.swift in Sources */,
+				A10000000000000000000065 /* RKMaterials.swift in Sources */,
+				A10000000000000000000063 /* RKMesh.swift in Sources */,
+				A1000000000000000000002A /* WorldController.swift in Sources */,
 				A1000000000000000000002C /* PenguinFactory.swift in Sources */,
 				A1000000000000000000002E /* WorldFactory.swift in Sources */,
 				A10000000000000000000030 /* EffectsFactory.swift in Sources */,
@@ -293,6 +330,9 @@
 				A1000000000000000000003C /* PauseView.swift in Sources */,
 				A1000000000000000000003E /* ResultsView.swift in Sources */,
 				A10000000000000000000040 /* SettingsView.swift in Sources */,
+				A10000000000000000000056 /* AdConfig.swift in Sources */,
+				A10000000000000000000058 /* AdManager.swift in Sources */,
+				A1000000000000000000005A /* BannerAdView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -356,7 +396,7 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.frostslide.FrostSlide;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -385,7 +425,7 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.frostslide.FrostSlide;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -418,6 +458,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1000000000000000000005E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1000000000000000000005F /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000005E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A10000000000000000000001 /* Project object */;
 }

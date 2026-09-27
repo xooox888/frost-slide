@@ -28,10 +28,17 @@ final class AudioHaptics {
     }
 
     func play(_ name: String, volume: Float = 1) {
-        guard enabledSound, let player = players[name] else { return }
+        guard enabledSound, !isSilenced, let player = players[name] else { return }
         player.volume = volume
         player.currentTime = 0
         player.play()
+    }
+
+    /// Ambient session already ducks for the hardware mute switch; also skip
+    /// when another app is playing or the output volume is effectively zero.
+    private var isSilenced: Bool {
+        let session = AVAudioSession.sharedInstance()
+        return session.secondaryAudioShouldBeSilencedHint || session.outputVolume < 0.01
     }
 
     func collect() {
@@ -76,7 +83,7 @@ final class AudioHaptics {
     }
 
     func tap(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        guard enabledHaptics else { return }
+        guard enabledHaptics, !UIAccessibility.isReduceMotionEnabled else { return }
         switch style {
         case .light: light.impactOccurred()
         case .medium: medium.impactOccurred()

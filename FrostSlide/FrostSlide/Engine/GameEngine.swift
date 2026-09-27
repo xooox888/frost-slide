@@ -26,7 +26,7 @@ final class GameEngine: ObservableObject {
     var boostHeld: Bool = false
     var dropBananaRequested: Bool = false
 
-    let sceneController = SceneController()
+    let worldController = WorldController()
     private var settings = GameSettings.default
     private var countdownLeft: TimeInterval = 3.2
     private var lastCountdownDigit = 4
@@ -35,6 +35,7 @@ final class GameEngine: ObservableObject {
     private var motion: CMMotionManager?
     private var windPhase: Float = 0
     private var timePenalty: TimeInterval = 0
+    private var rewardedTurboUsed = false
 
     func start(level: LevelDefinition, settings: GameSettings) {
         self.settings = settings
@@ -54,6 +55,7 @@ final class GameEngine: ObservableObject {
         lastCountdownDigit = 4
         finishHold = 0
         resultEmitted = false
+        rewardedTurboUsed = false
         paused = false
         phase = .countdown(3)
         toastText = ""
@@ -61,7 +63,7 @@ final class GameEngine: ObservableObject {
         landingPulse = 0
         cameraFOV = 50
         configureMotion()
-        sceneController.build(level: level, path: path!, racers: racers)
+        worldController.build(level: level, path: path!, racers: racers)
         if let path, let player = playerRacer {
             let sample = path.sample(at: player.progress)
             let pos = path.worldPosition(progress: player.progress, lateral: player.lateral, height: 0)
@@ -82,6 +84,17 @@ final class GameEngine: ObservableObject {
         teardownMotion()
     }
 
+    /// Called after a user-opt-in rewarded video. Once per race.
+    func grantRewardedTurbo() {
+        guard !rewardedTurboUsed, let i = racers.firstIndex(where: \.isPlayer) else { return }
+        rewardedTurboUsed = true
+        racers[i].turbo = 1
+        racers[i].trailBoost = 0.45
+        toast("Turbo refilled!")
+        AudioHaptics.shared.power()
+        publishHUD()
+    }
+
     func tick(dt rawDT: TimeInterval) {
         guard level != nil, path != nil, phase != .idle else { return }
         if paused { return }
@@ -90,16 +103,16 @@ final class GameEngine: ObservableObject {
         case .countdown:
             updateCountdown(TimeInterval(dt))
             bobIdle(dt)
-            sceneController.apply(engine: self, dt: dt)
+            worldController.apply(engine: self, dt: dt)
             publishHUD()
         case .racing:
             simulate(dt: dt)
-            sceneController.apply(engine: self, dt: dt)
+            worldController.apply(engine: self, dt: dt)
             publishHUD()
         case .finished:
             finishHold += TimeInterval(dt)
             simulateCoasting(dt: dt)
-            sceneController.apply(engine: self, dt: dt)
+            worldController.apply(engine: self, dt: dt)
             publishHUD()
             if !resultEmitted && finishHold > 1.15 {
                 resultEmitted = true
@@ -665,7 +678,9 @@ final class GameEngine: ObservableObject {
             toast: toastText,
             checkpoints: level?.checkpoints.filter { $0 > 0 } ?? [],
             speedKph: Int((player?.speed ?? 0) * 4.2),
-            levelName: level?.name ?? ""
+            levelName: level?.name ?? "",
+            rewardedTurboUsed: rewardedTurboUsed,
+            racing: phase == .racing
         )
         DispatchQueue.main.async { [weak self] in
             self?.hud = snap

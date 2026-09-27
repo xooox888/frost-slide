@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ResultsView: View {
     @EnvironmentObject private var app: AppModel
+    @EnvironmentObject private var ads: AdManager
 
     var body: some View {
         let result = app.lastResult
@@ -38,24 +39,31 @@ struct ResultsView: View {
                 VStack(spacing: 10) {
                     if app.selectedLevel.next != nil {
                         FrostButton(title: "Next Course", icon: "forward.fill", color: FrostTheme.ice) {
-                            app.nextLevel()
+                            leaveResults { app.nextLevel() }
                         }
                     }
                     FrostButton(title: "Race Again", icon: "arrow.counterclockwise", color: FrostTheme.ochre, foreground: FrostTheme.ink) {
                         app.restart()
                     }
                     FrostButton(title: "Course Map", icon: "map.fill", color: FrostTheme.inkSoft) {
-                        app.backToMap()
+                        leaveResults { app.backToMap() }
                     }
-                    Button("Main Menu") { app.backToMenu() }
-                        .font(FrostTheme.bodyFont)
-                        .foregroundStyle(FrostTheme.inkSoft)
-                        .padding(.top, 4)
+                    Button("Main Menu") {
+                        leaveResults { app.backToMenu() }
+                    }
+                    .font(FrostTheme.bodyFont)
+                    .foregroundStyle(FrostTheme.inkSoft)
+                    .padding(.top, 4)
                 }
                 .padding(.horizontal, 28)
             }
             .padding(.top, 28)
         }
+    }
+
+    /// Interstitial only when leaving results — never mid-race, never on rematch.
+    private func leaveResults(_ action: @escaping () -> Void) {
+        ads.showInterstitialThen(action)
     }
 
     private func stat(_ title: String, _ value: String) -> some View {

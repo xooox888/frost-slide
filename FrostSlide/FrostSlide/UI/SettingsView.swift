@@ -31,17 +31,40 @@ struct SettingsView: View {
 
                 toggleRow("Swipe steering", subtitle: "Drag left and right anywhere on the slope.", isOn: true, disabled: true)
                 toggle("Tilt steering", subtitle: "Add accelerometer lean on top of swipe.", key: \.tiltSteering)
-                toggle("Haptics", subtitle: "Taps for boost, collect, crash, and finish.", key: \.hapticsEnabled)
-                toggle("Sound", subtitle: "Arcade blips bundled with the app.", key: \.soundEnabled)
-                toggle("Unlock all courses", subtitle: "Debug skip for designers and testers.", key: \.unlockAll)
+                toggle("Haptics", subtitle: "Taps for boost, collect, crash, and finish. Off when Reduce Motion is on.", key: \.hapticsEnabled)
+                toggle("Sound", subtitle: "Arcade blips. Silent switch and other audio are respected.", key: \.soundEnabled)
+                #if DEBUG
+                toggle("Unlock all courses", subtitle: "DEBUG only — stripped from Release / App Store builds.", key: \.unlockAll)
+                #endif
+
+                Link(destination: AdConfig.privacyPolicyURL) {
+                    HStack {
+                        Image(systemName: "hand.raised.fill")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Privacy Policy")
+                                .font(.custom("AvenirNext-Bold", size: 17))
+                            Text("TODO: replace https://example.com/frost-slide-privacy")
+                                .font(FrostTheme.captionFont)
+                                .foregroundStyle(FrostTheme.inkSoft)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                    }
+                    .foregroundStyle(FrostTheme.ink)
+                    .padding(18)
+                    .background(
+                        RoundedRectangle(cornerRadius: 26, style: .continuous)
+                            .fill(.white.opacity(0.78))
+                    )
+                }
 
                 FrostButton(title: "Reset progress", icon: "trash", color: FrostTheme.berry) {
                     app.persistence.resetProgress()
                 }
-                .padding(.top, 8)
+                .padding(.top, 4)
 
                 Spacer()
-                Text("Frost Slide  ·  iOS 17+  ·  SceneKit")
+                Text("Frost Slide 1.0.0  ·  com.frostslide.FrostSlide")
                     .font(FrostTheme.captionFont)
                     .foregroundStyle(FrostTheme.inkSoft)
                     .frame(maxWidth: .infinity)
