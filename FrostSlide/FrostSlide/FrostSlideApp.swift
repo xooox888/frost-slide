@@ -3,13 +3,18 @@ import SwiftUI
 @main
 struct FrostSlideApp: App {
     @StateObject private var app = AppModel()
+    @StateObject private var ads = AdManager.shared
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(app)
+                .environmentObject(ads)
                 .preferredColorScheme(.light)
                 .statusBarHidden(true)
+                .onAppear {
+                    ads.start()
+                }
         }
     }
 }

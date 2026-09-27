@@ -3,9 +3,11 @@ import SwiftUI
 struct RaceHUDView: View {
     let hud: HUDSnapshot
     let paused: Bool
+    var rewardedReady: Bool = false
     var onPause: () -> Void
     var boostChanged: (Bool) -> Void
     var dropBanana: () -> Void
+    var onRewardedTurbo: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 0) {
@@ -118,6 +120,20 @@ struct RaceHUDView: View {
                 }
             }
             Spacer()
+            if showRewarded {
+                Button(action: onRewardedTurbo) {
+                    VStack(spacing: 3) {
+                        Image(systemName: "play.rectangle.fill")
+                        Text("REFILL")
+                            .font(.custom("AvenirNext-Heavy", size: 9))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(width: 58, height: 58)
+                    .background(Circle().fill(FrostTheme.iceDeep))
+                }
+                .allowsHitTesting(true)
+                .accessibilityLabel("Watch a short video to refill turbo")
+            }
             if hud.bananaArmed {
                 Button(action: dropBanana) {
                     VStack(spacing: 4) {
@@ -134,6 +150,14 @@ struct RaceHUDView: View {
             HoldButton(title: "BOOST", color: FrostTheme.berry, changed: boostChanged)
                 .allowsHitTesting(true)
         }
+    }
+
+    private var showRewarded: Bool {
+        hud.racing
+            && !hud.rewardedTurboUsed
+            && rewardedReady
+            && hud.turbo < 0.28
+            && hud.countdown == nil
     }
 
     private func chip(_ title: String, _ color: Color) -> some View {

@@ -23,10 +23,15 @@ SWIFT_FILES = [
     "Engine/TrackPath.swift",
     "Engine/RacerSimulation.swift",
     "Engine/GameEngine.swift",
-    "Scene/SceneController.swift",
-    "Scene/PenguinFactory.swift",
-    "Scene/WorldFactory.swift",
-    "Scene/EffectsFactory.swift",
+    "Reality/RKMaterials.swift",
+    "Reality/RKMesh.swift",
+    "Reality/WorldController.swift",
+    "Reality/PenguinFactory.swift",
+    "Reality/WorldFactory.swift",
+    "Reality/EffectsFactory.swift",
+    "Ads/AdConfig.swift",
+    "Ads/AdManager.swift",
+    "Ads/BannerAdView.swift",
     "UI/FrostTheme.swift",
     "UI/MainMenuView.swift",
     "UI/LevelSelectView.swift",
@@ -40,6 +45,7 @@ SWIFT_FILES = [
 RESOURCE_FILES = [
     "Assets.xcassets",
     "Info.plist",
+    "PrivacyInfo.xcprivacy",
     "Resources/Sounds/collect.wav",
     "Resources/Sounds/boost.wav",
     "Resources/Sounds/crash.wav",
@@ -131,7 +137,8 @@ def generate_pbxproj() -> None:
         "App": nid("g_app"),
         "Core": nid("g_core"),
         "Engine": nid("g_engine"),
-        "Scene": nid("g_scene"),
+        "Reality": nid("g_reality"),
+        "Ads": nid("g_ads"),
         "UI": nid("g_ui"),
         "Resources": nid("g_res"),
         "Resources/Sounds": nid("g_sounds"),
@@ -183,7 +190,7 @@ def generate_pbxproj() -> None:
             lines.append(f"\t\t\t\t{file_refs[rel]} /* {Path(rel).name} */,")
         return "\n".join(lines)
 
-    swift_by_dir: dict[str, list[str]] = {k: [] for k in ["", "App", "Core", "Engine", "Scene", "UI"]}
+    swift_by_dir: dict[str, list[str]] = {k: [] for k in ["", "App", "Core", "Engine", "Reality", "Ads", "UI"]}
     for rel in SWIFT_FILES:
         if "/" in rel:
             swift_by_dir[str(Path(rel).parent)].append(rel)
@@ -214,7 +221,8 @@ def generate_pbxproj() -> None:
 \t\t\t\t{src_groups["App"]} /* App */,
 \t\t\t\t{src_groups["Core"]} /* Core */,
 \t\t\t\t{src_groups["Engine"]} /* Engine */,
-\t\t\t\t{src_groups["Scene"]} /* Scene */,
+\t\t\t\t{src_groups["Reality"]} /* Reality */,
+\t\t\t\t{src_groups["Ads"]} /* Ads */,
 \t\t\t\t{src_groups["UI"]} /* UI */,
 \t\t\t\t{src_groups["Resources"]} /* Resources */,
 \t\t\t\t{file_refs["Assets.xcassets"]} /* Assets.xcassets */,
@@ -224,7 +232,7 @@ def generate_pbxproj() -> None:
 \t\t\tsourceTree = "<group>";
 \t\t}};""",
     ]
-    for folder in ["App", "Core", "Engine", "Scene", "UI"]:
+    for folder in ["App", "Core", "Engine", "Reality", "Ads", "UI"]:
         group_lines.append(
             f"""\t\t{src_groups[folder]} /* {folder} */ = {{
 \t\t\tisa = PBXGroup;
@@ -586,7 +594,8 @@ def generate_pbxproj() -> None:
 
 if __name__ == "__main__":
     generate_sounds()
-    generate_pbxproj()
+    # Do not overwrite FrostSlide.xcodeproj — it is hand-maintained
+    # (RealityKit sources + GoogleMobileAds SPM + PrivacyInfo).
     missing = []
     for rel in SWIFT_FILES + RESOURCE_FILES:
         path = APP / rel
@@ -594,4 +603,4 @@ if __name__ == "__main__":
             missing.append(str(path))
     if missing:
         raise SystemExit("Missing files:\n" + "\n".join(missing))
-    print("Project files verified.")
+    print("Sounds regenerated. Project files verified (pbxproj left untouched).")

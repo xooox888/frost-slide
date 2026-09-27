@@ -38,15 +38,22 @@ final class GamePersistence: ObservableObject {
                 recs[id] = value
             }
         }
+        var settings = blob.settings
+        #if !DEBUG
+        settings.unlockAll = false
+        #endif
         return GamePersistence(
             unlocked: Set(blob.unlocked),
             records: recs,
-            settings: blob.settings
+            settings: settings
         )
     }
 
     func isUnlocked(_ id: LevelID) -> Bool {
-        settings.unlockAll || unlocked.contains(id)
+        #if DEBUG
+        if settings.unlockAll { return true }
+        #endif
+        return unlocked.contains(id)
     }
 
     func record(_ result: RaceResult) {

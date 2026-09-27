@@ -2,19 +2,20 @@ import SwiftUI
 
 struct MainMenuView: View {
     @EnvironmentObject private var app: AppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
-            Image("KeyArt")
+            Image("MenuHero")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
                 .overlay(
                     LinearGradient(
                         colors: [
-                            Color.white.opacity(0.15),
-                            FrostTheme.iceDeep.opacity(0.35),
-                            FrostTheme.ink.opacity(0.55)
+                            FrostTheme.night.opacity(0.15),
+                            FrostTheme.iceDeep.opacity(0.28),
+                            FrostTheme.night.opacity(0.72)
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -25,21 +26,27 @@ struct MainMenuView: View {
 
             VStack(spacing: 0) {
                 Spacer()
-                VStack(spacing: 6) {
+                Image("BrandBadge")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: reduceMotion ? 88 : 104, height: reduceMotion ? 88 : 104)
+                    .shadow(color: FrostTheme.ice.opacity(0.45), radius: 16, y: 6)
+                    .padding(.bottom, 10)
+                VStack(spacing: 2) {
                     Text("FROST")
-                        .font(.custom("AvenirNext-Heavy", size: 52))
+                        .font(.custom("AvenirNext-Heavy", size: 50))
                         .foregroundStyle(.white)
-                        .shadow(color: FrostTheme.iceDeep.opacity(0.45), radius: 8, y: 3)
+                        .shadow(color: FrostTheme.iceDeep.opacity(0.55), radius: 8, y: 3)
                     Text("SLIDE")
-                        .font(.custom("AvenirNext-Heavy", size: 52))
+                        .font(.custom("AvenirNext-Heavy", size: 50))
                         .foregroundStyle(FrostTheme.ice)
-                        .shadow(color: FrostTheme.iceDeep.opacity(0.5), radius: 8, y: 3)
-                    Text("Downhill disc racing")
-                        .font(.custom("AvenirNext-DemiBold", size: 16))
+                        .shadow(color: FrostTheme.ice.opacity(0.45), radius: 8, y: 3)
+                    Text("Ice-crystal downhill racing")
+                        .font(.custom("AvenirNext-DemiBold", size: 15))
                         .foregroundStyle(.white.opacity(0.86))
-                        .padding(.top, 4)
+                        .padding(.top, 6)
                 }
-                .padding(.bottom, 28)
+                .padding(.bottom, 24)
 
                 VStack(spacing: 12) {
                     FrostButton(title: "Race", icon: "flag.checkered", color: FrostTheme.berry) {
@@ -57,8 +64,11 @@ struct MainMenuView: View {
                 Text("Swipe to steer  ·  Hold turbo to boost")
                     .font(FrostTheme.captionFont)
                     .foregroundStyle(.white.opacity(0.72))
-                    .padding(.top, 22)
-                    .padding(.bottom, 36)
+                    .padding(.top, 16)
+
+                BannerAdView()
+                    .padding(.top, 14)
+                    .padding(.bottom, 8)
             }
         }
     }

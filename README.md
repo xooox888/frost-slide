@@ -1,93 +1,126 @@
 # Frost Slide
 
-A native iOS downhill sled racer. You are a penguin on a glowing blue disc, carving an ice trail through six hand-authored courses — snowy town streets, a packed market, a glass-blue cave spiral, an aurora night, a frozen harbor, and a windy summit.
+A native iOS downhill sled racer. You are a penguin on a glowing cyan disc, carving an ice trail through six original courses.
 
-Built with **Swift + SwiftUI** for menus/HUD and **SceneKit** for the 3D race world. Portrait, iPhone first, iOS 17+.
+Built with **Swift + SwiftUI** for menus, HUD, results, and settings, and **RealityKit** for all 3D gameplay (Entity / Component, `ARView` in non-AR game mode embedded in SwiftUI). No SceneKit. Portrait, iPhone first, iOS 17+. Bundle id: **`com.frostslide.FrostSlide`**. Version **1.0.0** (build 1).
+
+Original Frost Slide art and UI only — not Sled Surfers (or any other game) assets or branding.
 
 ## Open and run
 
-This repository was authored on Linux, so it has not been compiled with Xcode here. The project is a complete `.xcodeproj` and will open on a Mac.
+1. Install Xcode 15 or newer (iOS 17 SDK). Xcode 16+ recommended so Swift Package Manager can resolve Google Mobile Ads.
+2. Open `FrostSlide/FrostSlide.xcodeproj`.
+3. Let Xcode resolve **GoogleMobileAds** from  
+   `https://github.com/googleads/swift-package-manager-google-mobile-ads.git`.
+4. Select the **FrostSlide** scheme and an iPhone simulator.
+5. Set your Personal Team under Signing & Capabilities if asked.
+6. Run. Portrait. First launch may prompt App Tracking Transparency (decline is fine; ads still try to fill).
 
-1. Install Xcode 15 or newer (iOS 17 SDK).
-2. Clone this repo and open `FrostSlide/FrostSlide.xcodeproj`.
-3. Select the **FrostSlide** scheme and an iPhone simulator (iPhone 15 / 16 recommended).
-4. If Xcode asks for a Development Team, set your Personal Team under the FrostSlide target → Signing & Capabilities. The bundle id is `com.frostslide.FrostSlide`.
-5. Press Run. The simulator should launch in portrait on the main menu.
-
-No third-party packages. No Unity / Flutter / React Native.
+If SPM cannot resolve, File → Add Package Dependencies and paste the same GitHub URL. Product name: `GoogleMobileAds`. CocoaPods is not required.
 
 ## How to play
 
-- **Steer:** drag left/right anywhere on the slope (default). Optional tilt steering lives in Settings.
-- **Turbo:** hold the red **BOOST** button. Frost crystals fill the meter.
-- **Peel:** if you pick up a banana, tap **PEEL** to drop it for rivals.
-- **Pause:** top-right. Restart, map, and menu are all there.
+- **Steer:** drag left/right. Optional tilt in Settings.
+- **Turbo:** hold **BOOST**. Crystals refill the meter.
+- **Rewarded refill (optional):** if turbo is low, tap **REFILL** once per race to watch a video. Never forced.
+- **Peel:** pick up a banana, tap **PEEL** to slow rivals.
+- Finish a course to unlock the next.
 
-Finish a course to unlock the next. Settings has **Unlock all courses** for debug.
+Unlock-all exists only in **DEBUG** builds. Release / TestFlight / App Store binaries ignore it.
 
 ### Stars
 
-Every finish is at least 1 star. Extra stars come from place, crystal count, and beating the course par time:
+1 star for finishing. Extra stars from place, crystal target, and par time.
 
-- 1st place is worth the most
-- Collect at least the course crystal target
-- Beat the par clock (shown as your time on the results card)
+### Courses
 
-### Power-ups
+1. **Village Dash** — ice-crystal arches, cyan trail, alpine streets  
+2. **Market Mayhem** — tight alleys, stalls, darting NPCs  
+3. **Ice Cave Spiral** — blue helix, stalactites  
+4. **Aurora Night** — night fog, glow pads  
+5. **Harbor Freeze** — docks; water = checkpoint + 3s  
+6. **Summit Rush** — steep jumps and wind  
 
-| Pickup | Effect |
-| --- | --- |
-| Crystal | Fills turbo |
-| Rocket | Huge speed burst |
-| Magnet | Pulls nearby crystals |
-| Ghost | Phase through the next smash (or a few seconds) |
-| Banana | Arm a peel that stuns whoever hits it |
+## Ads (AdMob)
 
-### Hazards
+Default configuration uses **Google test ad unit IDs**. The game stays playable if ads fail to load.
 
-Snowmen, crates, ice patches (slidey), moving carts, darting market NPCs, low bridges, stalactites, wind gusts, and harbor water (splash = last checkpoint + 3s).
+| Placement | When | Unit |
+| --- | --- | --- |
+| Banner | Main menu + course map only | Test banner |
+| Interstitial | After results, when tapping Next / Map / Menu (not rematch, not mid-race) | Test interstitial |
+| Rewarded | Opt-in **REFILL** on the race HUD, once per race | Test rewarded |
 
-## Courses
+### Swap test → production IDs
 
-1. **Village Dash** — ochre walls, stone archways, yellow chevron ramps (closest to the reference vibe).
-2. **Market Mayhem** — tighter alleys, stalls, darting NPCs.
-3. **Ice Cave Spiral** — blue ice tunnel, continuous helix, stalactites.
-4. **Aurora Night** — night lighting, glow pads, heavier fog.
-5. **Harbor Freeze** — docks, icy planks, water on both sides.
-6. **Summit Rush** — steep face, big jumps, left/right wind.
+1. Create an AdMob account and an **iOS app** with bundle id `com.frostslide.FrostSlide`.
+2. Create Banner, Interstitial, and Rewarded units.
+3. Edit `FrostSlide/FrostSlide/Ads/AdConfig.swift`:
+   - Set `useGoogleTestAds = false`
+   - Paste `productionAppID`, `productionBanner`, `productionInterstitial`, `productionRewarded`
+4. Replace `GADApplicationIdentifier` in `FrostSlide/FrostSlide/Info.plist` with the same production **app** ID (`ca-app-pub-…~…`).
+5. Host a real privacy policy and replace `https://example.com/frost-slide-privacy` in `AdConfig.privacyPolicyURL` (Settings link + this README).
+6. Run on a device with a non-test unit only after AdMob has approved the app.
 
-Rivals Pico (green, aggressive), Ruby (red, boost-hoarder), Violet (purple, cautious), plus Navy and Amber on later courses.
+Test IDs (already wired):
+
+- App: `ca-app-pub-3940256099942544~1458002511`
+- Banner: `ca-app-pub-3940256099942544/2934735716`
+- Interstitial: `ca-app-pub-3940256099942544/4411468910`
+- Rewarded: `ca-app-pub-3940256099942544/1712485313`
+
+## Privacy policy
+
+**TODO — placeholder:** [https://example.com/frost-slide-privacy](https://example.com/frost-slide-privacy)
+
+Publish a real page (what you collect, AdMob/ATT, kids) and paste that URL into `AdConfig.privacyPolicyURL` and App Store Connect.
+
+## App Store notes (age / content)
+
+Suggested questionnaire answers:
+
+- Age rating **4+** (or 9+ if you prefer a slightly firmer cartoon-crash label)
+- Cartoon / fantasy violence only (sled bumps, splash respawn) — **no realistic violence**
+- **No** gambling, contests, or loot boxes
+- **No** user-generated content, social, or chat
+- Ads: yes (AdMob). Unrestricted web access: no
+- In-app purchases: none in 1.0.0
+- Made for Kids: **no** (ads + ATT). Do not check Made for Kids while using AdMob
+
+## Shipping checklist
+
+1. Enroll in the [Apple Developer Program](https://developer.apple.com).
+2. App Store Connect → New App → iOS, name **Frost Slide**, bundle id **`com.frostslide.FrostSlide`**, SKU of your choice.
+3. Replace AdMob test IDs (see above) and the privacy-policy URL.
+4. Archive a **Release** build (Product → Archive) and upload with Organizer / Transporter.
+5. Screenshots: use `Marketing/screenshots/` as a starting set, then capture live Simulator stills of Village Dash, Ice Cave, and Aurora Night on a 6.7" iPhone.
+6. Fill Privacy Nutrition Labels (UserDefaults for saves; tracking only if the player allows ATT for ads).
+7. Export compliance: **ITSAppUsesNonExemptEncryption** is already `false` (HTTPS only).
+8. Submit for TestFlight, then App Store review.
+
+## Marketing visuals
+
+Original stills live in [`Marketing/screenshots/`](Marketing/screenshots/) (menu hero, brand badge, Village Dash, Ice Cave, Aurora Night). They are Frost Slide–branded (navy + electric cyan, ice-crystal gates), not live Simulator captures. Capture those on a Mac before submission.
 
 ## Architecture
 
 ```
-FrostSlide/
-  FrostSlide.xcodeproj
-  FrostSlide/
-    FrostSlideApp.swift          SwiftUI app + root router
-    App/AppModel.swift           Navigation, persistence, race session
-    Core/                        Models, 6-level catalog, save data, audio/haptics
-    Engine/                      Spline track, arcade physics, AI, collisions
-    Scene/                       SceneKit world, penguin rig, props, particles
-    UI/                          Menu, map, HUD, pause, results, settings
-    Assets.xcassets              App icon, key art, mascot, launch color
-    Resources/Sounds/            Generated WAV stingers
+FrostSlide/FrostSlide/
+  FrostSlideApp.swift     App + ATT/AdMob start
+  Ads/                    AdConfig, AdManager, BannerAdView
+  App/                    Navigation + persistence
+  Core/                   Levels, save data, audio/haptics
+  Engine/                 Arcade spline sim (progress + lateral + air)
+  Reality/                RealityKit world (WorldController, factories, meshes)
+  UI/                     Menu, map, HUD, results, settings
+  PrivacyInfo.xcprivacy   UserDefaults reason CA92.1
+  Info.plist              Display name, ATT, AdMob app id, SKAdNetwork
 ```
 
-The simulation is arcade, not a full rigid-body solver: racers live in progress + lateral + air height on a generated downhill spline. SceneKit is the renderer. SwiftUI owns every 2D surface.
+The race viewport is `ARView(cameraMode: .nonAR, automaticallyConfigureSession: false)` — a RealityKit game view, not AR. Penguin, disc sled, track ribbon, props, ice-trail stamps, and snowfall are RealityKit entities. Simulation stays on the arcade spline; RealityKit is the renderer only. iOS 17 cannot use `RealityView` (iOS 18+), so `ARView` is the supported embed.
 
-Progress (unlocked courses, best place / stars / time / crystals) is stored in `UserDefaults`.
-
-## Controls and settings
-
-| Setting | Default | Notes |
-| --- | --- | --- |
-| Swipe steering | On | Always available |
-| Tilt steering | Off | Uses Core Motion; needs the motion usage string |
-| Haptics | On | Boost, collect, crash, finish |
-| Sound | On | Short WAV tones |
-| Unlock all | Off | Debug |
+Sound uses an **ambient** audio session (hardware mute + other audio respected). Haptics and snowfall skip when **Reduce Motion** is on.
 
 ## License / assets
 
-All 3D props, penguins, tracks, and UI are original procedural SceneKit / SwiftUI work. Menu key art and the app icon are original generated illustrations inspired by the brief, not copied from any proprietary game. Reference screenshots were used only as visual direction.
+All 3D props, penguins, tracks, UI, and marketing stills are original Frost Slide work. Do not ship third-party sled-game assets or names.

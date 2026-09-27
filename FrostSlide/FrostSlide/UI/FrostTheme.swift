@@ -37,7 +37,12 @@ enum FrostTheme {
 
 struct SnowfallOverlay: View {
     var density: Int = 28
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
+        if reduceMotion {
+            Color.clear
+        } else {
         TimelineView(.animation) { timeline in
             Canvas { context, size in
                 let t = timeline.date.timeIntervalSinceReferenceDate
@@ -53,6 +58,7 @@ struct SnowfallOverlay: View {
             }
         }
         .allowsHitTesting(false)
+        }
     }
 }
 

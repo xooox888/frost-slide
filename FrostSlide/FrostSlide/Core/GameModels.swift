@@ -268,6 +268,8 @@ struct HUDSnapshot: Equatable {
     var checkpoints: [Float]
     var speedKph: Int
     var levelName: String
+    var rewardedTurboUsed: Bool
+    var racing: Bool
 
     static let empty = HUDSnapshot(
         place: 1,
@@ -287,7 +289,9 @@ struct HUDSnapshot: Equatable {
         toast: "",
         checkpoints: [0.25, 0.5, 0.75],
         speedKph: 0,
-        levelName: ""
+        levelName: "",
+        rewardedTurboUsed: false,
+        racing: false
     )
 }
 
@@ -330,8 +334,6 @@ enum GameMath {
 }
 
 extension SIMD3 where Scalar == Float {
-    var scn: (x: Float, y: Float, z: Float) { (x, y, z) }
-
     var color: Color {
         Color(red: Double(x), green: Double(y), blue: Double(z))
     }
