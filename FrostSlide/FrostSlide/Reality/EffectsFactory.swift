@@ -4,8 +4,8 @@ import simd
 final class IceTrail {
     private let root = Entity()
     private var stamps: [ModelEntity] = []
-    private let maxStamps = 40
-    private let disc = RKMesh.cylinder(radius: 0.28, height: 0.02)
+    private let maxStamps = 64
+    private let disc = RKMesh.cylinder(radius: 0.32, height: 0.02)
 
     init(parent: Entity) {
         root.name = "iceTrail"
@@ -43,7 +43,7 @@ final class SnowField {
     func attach(to parent: Entity, night: Bool) {
         root.name = "snow"
         parent.addChild(root)
-        let count = night ? 28 : 46
+        let count = night ? 36 : 52
         let mesh = MeshResource.generateBox(size: [0.07, 0.07, 0.07])
         let mat = RKMat.pbr(SIMD3(1, 1, 1), roughness: 0.9, alpha: night ? 0.55 : 0.8)
         for _ in 0..<count {
@@ -56,6 +56,19 @@ final class SnowField {
             root.addChild(flake)
             flakes.append(flake)
             velocities.append(Float.random(in: 2.2...5.5))
+        }
+    }
+
+    func burst(at position: SIMD3<Float>) {
+        let mesh = MeshResource.generateSphere(radius: 0.09)
+        let mat = RKMat.pbr(SIMD3(0.92, 0.96, 1.0), roughness: 0.7, alpha: 0.7)
+        for i in 0..<10 {
+            let puff = ModelEntity(mesh: mesh, materials: [mat])
+            let a = Float(i) / 10 * 2 * Float.pi
+            puff.position = position + SIMD3(cos(a) * 0.55, 0.12, sin(a) * 0.55)
+            root.addChild(puff)
+            flakes.append(puff)
+            velocities.append(3.2)
         }
     }
 

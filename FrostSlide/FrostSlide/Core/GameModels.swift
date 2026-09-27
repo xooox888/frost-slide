@@ -3,25 +3,18 @@ import simd
 import SwiftUI
 
 enum LevelID: String, CaseIterable, Codable, Identifiable, Comparable {
-    case villageDash
-    case marketMayhem
-    case iceCaveSpiral
-    case auroraNight
-    case harborFreeze
-    case summitRush
+    case villageDash, marketMayhem, alleySprint
+    case iceCaveSpiral, crystalGrotto, frozenHollow
+    case auroraNight, polarVeil, midnightRibbon
+    case harborFreeze, driftwoodDocks, tideGate
+    case summitRush, glacierDrop, icefallRun
+    case pineWhisper, timberSwitchback, owlHollow
+    case canyonGlow, prismCut, steamVeil
+    case whiteoutPeak, neonSlalom, carnivalParade
 
     var id: String { rawValue }
 
-    var order: Int {
-        switch self {
-        case .villageDash: return 0
-        case .marketMayhem: return 1
-        case .iceCaveSpiral: return 2
-        case .auroraNight: return 3
-        case .harborFreeze: return 4
-        case .summitRush: return 5
-        }
-    }
+    var order: Int { Self.allCases.firstIndex(of: self) ?? 0 }
 
     static func < (lhs: LevelID, rhs: LevelID) -> Bool {
         lhs.order < rhs.order
@@ -30,10 +23,15 @@ enum LevelID: String, CaseIterable, Codable, Identifiable, Comparable {
     var next: LevelID? {
         LevelID.allCases.first { $0.order == order + 1 }
     }
+
+    var world: CourseWorld {
+        CourseWorld.allCases.first { $0.courses.contains(self) } ?? .villageMarket
+    }
 }
 
 enum LevelTheme: String, Codable {
     case village, market, cave, aurora, harbor, summit
+    case forest, canyon, steam, blizzard, neon, carnival
 }
 
 enum Personality: String, Codable {
@@ -47,12 +45,14 @@ enum PropKind: String, Codable {
     case icicle, auroraRibbon, lantern, chimney, barrel, lamp
     case snowman, crate, icePatch, cart, bridge, stalactite, water, wind, npc
     case crystal, turboPad, ramp
-    case rocket, magnet, ghost, banana
+    case rocket, magnet, ghost, banana, flare
     case checkpoint, finish, startBanner
+    case avalanche, shortcut, movingBridge
+    case geyser, carnivalFloat, neonArch, crystalSpire
 }
 
 enum PowerUpType: String, Codable, CaseIterable {
-    case rocket, magnet, ghost, banana
+    case rocket, magnet, ghost, banana, flare
 
     var title: String {
         switch self {
@@ -60,6 +60,7 @@ enum PowerUpType: String, Codable, CaseIterable {
         case .magnet: return "Magnet"
         case .ghost: return "Ghost"
         case .banana: return "Peel"
+        case .flare: return "Flare"
         }
     }
 
@@ -69,8 +70,22 @@ enum PowerUpType: String, Codable, CaseIterable {
         case .magnet: return "magnet"
         case .ghost: return "sparkles"
         case .banana: return "leaf.fill"
+        case .flare: return "light.max"
         }
     }
+}
+
+struct CourseEvent: Codable, Equatable {
+    enum Kind: String, Codable {
+        case avalanche
+        case shortcut
+    }
+
+    var kind: Kind
+    var start: Float
+    var end: Float
+    var lateral: Float
+    var magnitude: Float
 }
 
 enum SurfaceKind: String, Codable {
@@ -192,6 +207,7 @@ struct LevelDefinition: Identifiable {
     var parTime: TimeInterval
     var crystalTarget: Int
     var crystalStar: Int
+    var events: [CourseEvent]
 
     var crystalCount: Int {
         entities.filter { $0.kind == .crystal }.count
@@ -203,13 +219,47 @@ struct GameSettings: Codable, Equatable {
     var unlockAll: Bool
     var hapticsEnabled: Bool
     var soundEnabled: Bool
+    var showGhost: Bool
+    var selectedSkin: SledSkin
 
     static let `default` = GameSettings(
         tiltSteering: false,
         unlockAll: false,
         hapticsEnabled: true,
-        soundEnabled: true
+        soundEnabled: true,
+        showGhost: true,
+        selectedSkin: .cyan
     )
+
+    enum CodingKeys: String, CodingKey {
+        case tiltSteering, unlockAll, hapticsEnabled, soundEnabled, showGhost, selectedSkin
+    }
+
+    init(
+        tiltSteering: Bool,
+        unlockAll: Bool,
+        hapticsEnabled: Bool,
+        soundEnabled: Bool,
+        showGhost: Bool,
+        selectedSkin: SledSkin
+    ) {
+        self.tiltSteering = tiltSteering
+        self.unlockAll = unlockAll
+        self.hapticsEnabled = hapticsEnabled
+        self.soundEnabled = soundEnabled
+        self.showGhost = showGhost
+        self.selectedSkin = selectedSkin
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        tiltSteering = try c.decodeIfPresent(Bool.self, forKey: .tiltSteering) ?? false
+        unlockAll = try c.decodeIfPresent(Bool.self, forKey: .unlockAll) ?? false
+        hapticsEnabled = try c.decodeIfPresent(Bool.self, forKey: .hapticsEnabled) ?? true
+        soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true
+        showGhost = try c.decodeIfPresent(Bool.self, forKey: .showGhost) ?? true
+        selectedSkin = try c.decodeIfPresent(SledSkin.self, forKey: .selectedSkin) ?? .cyan
+    }
 }
 
 struct LevelRecord: Codable, Equatable {
@@ -218,14 +268,46 @@ struct LevelRecord: Codable, Equatable {
     var bestTime: TimeInterval
     var bestCrystals: Int
     var timesPlayed: Int
+    var ghost: GhostTake?
 
     static let empty = LevelRecord(
         bestPlace: 99,
         bestStars: 0,
         bestTime: 9999,
         bestCrystals: 0,
-        timesPlayed: 0
+        timesPlayed: 0,
+        ghost: nil
     )
+
+    enum CodingKeys: String, CodingKey {
+        case bestPlace, bestStars, bestTime, bestCrystals, timesPlayed, ghost
+    }
+
+    init(
+        bestPlace: Int,
+        bestStars: Int,
+        bestTime: TimeInterval,
+        bestCrystals: Int,
+        timesPlayed: Int,
+        ghost: GhostTake?
+    ) {
+        self.bestPlace = bestPlace
+        self.bestStars = bestStars
+        self.bestTime = bestTime
+        self.bestCrystals = bestCrystals
+        self.timesPlayed = timesPlayed
+        self.ghost = ghost
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        bestPlace = try c.decodeIfPresent(Int.self, forKey: .bestPlace) ?? 99
+        bestStars = try c.decodeIfPresent(Int.self, forKey: .bestStars) ?? 0
+        bestTime = try c.decodeIfPresent(TimeInterval.self, forKey: .bestTime) ?? 9999
+        bestCrystals = try c.decodeIfPresent(Int.self, forKey: .bestCrystals) ?? 0
+        timesPlayed = try c.decodeIfPresent(Int.self, forKey: .timesPlayed) ?? 0
+        ghost = try c.decodeIfPresent(GhostTake.self, forKey: .ghost)
+    }
 }
 
 struct RaceResult: Identifiable, Equatable {
@@ -238,6 +320,10 @@ struct RaceResult: Identifiable, Equatable {
     var crystalTotal: Int
     var stars: Int
     var podium: [PodiumEntry]
+    var comboMax: Int
+    var nearMisses: Int
+    var unlockedSkin: SledSkin?
+    var daily: Bool
 }
 
 struct PodiumEntry: Equatable, Identifiable {
@@ -270,6 +356,11 @@ struct HUDSnapshot: Equatable {
     var levelName: String
     var rewardedTurboUsed: Bool
     var racing: Bool
+    var combo: Int
+    var nearMisses: Int
+    var flareActive: Bool
+    var avalancheThreat: Bool
+    var avalancheProgress: Float
 
     static let empty = HUDSnapshot(
         place: 1,
@@ -291,7 +382,12 @@ struct HUDSnapshot: Equatable {
         speedKph: 0,
         levelName: "",
         rewardedTurboUsed: false,
-        racing: false
+        racing: false,
+        combo: 0,
+        nearMisses: 0,
+        flareActive: false,
+        avalancheThreat: false,
+        avalancheProgress: 0
     )
 }
 

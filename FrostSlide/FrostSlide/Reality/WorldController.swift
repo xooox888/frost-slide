@@ -13,8 +13,11 @@ final class WorldController {
     private var trail: IceTrail?
     private var snow = SnowField()
     private var peelEntities: [UUID: Entity] = [:]
+    private var ghostEntity: Entity?
+    private var avalancheWall: Entity?
     private var trailTick: Float = 0
     private var spinTime: Float = 0
+    private var lastLanding = false
     private var built = false
     private var pending: (LevelDefinition, TrackPath, [Racer])?
 
@@ -69,11 +72,23 @@ final class WorldController {
         anchor.addChild(camera)
 
         peelEntities = [:]
+        ghostEntity?.removeFromParent()
+        ghostEntity = nil
+        avalancheWall?.removeFromParent()
+        avalancheWall = nil
+        lastLanding = false
         trail?.clear()
         trail = IceTrail(parent: worldRoot)
         snow = SnowField()
         if !UIAccessibility.isReduceMotionEnabled {
             snow.attach(to: worldRoot, night: level.palette.night)
+        }
+        if level.events.contains(where: { $0.kind == .avalanche }) {
+            let wall = RKEntity.box([18, 5.5, 2.4], SIMD3(0.92, 0.96, 1.0), roughness: 0.85)
+            wall.name = "avalanche"
+            wall.isEnabled = false
+            worldRoot.addChild(wall)
+            avalancheWall = wall
         }
         built = true
     }
@@ -130,19 +145,61 @@ final class WorldController {
         }
 
         syncPeels(engine: engine, path: path)
+        syncGhost(engine: engine, path: path)
+        syncAvalanche(engine: engine, path: path)
 
         if let player = engine.playerRacer {
             let pos = path.worldPosition(progress: player.progress, lateral: player.lateral, height: 0)
             trailTick += dt
-            if trailTick > 0.05 && !player.airborne {
+            if trailTick > 0.035 && !player.airborne {
                 trailTick = 0
-                trail?.push(position: pos, intense: player.trailBoost > 0 || player.rocketTime > 0)
+                trail?.push(position: pos, intense: player.trailBoost > 0 || player.rocketTime > 0 || engine.combo >= 3)
             }
             snow.tick(dt: dt, around: engine.cameraEye)
+            if engine.landingPulse > 0.7 && !lastLanding {
+                snow.burst(at: pos)
+                lastLanding = true
+            }
+            if engine.landingPulse < 0.15 { lastLanding = false }
+            if let glow = racerEntities[player.id]?.findEntity(named: "sledGlow") as? PointLight {
+                glow.light.intensity = 280 + player.trailBoost * 700 + player.rocketTime * 400 + player.flareTime * 80
+                glow.light.attenuationRadius = player.flareTime > 0 ? 14 : 5
+            }
+        }
+        if let view {
+            let night = engine.level?.palette.night == true
+            let flare = (engine.playerRacer?.flareTime ?? 0) > 0
+            view.environment.lighting.intensityExponent = night ? (flare ? 0.35 : -0.15) : 0.15
         }
 
         camera.look(at: engine.cameraLook, from: engine.cameraEye, relativeTo: nil)
         camera.camera.fieldOfViewInDegrees = engine.cameraFOV
+    }
+
+    private func syncGhost(engine: GameEngine, path: TrackPath) {
+        guard let pose = engine.ghostPose else {
+            ghostEntity?.isEnabled = false
+            return
+        }
+        if ghostEntity == nil {
+            let ghost = PenguinFactory.make(sledColor: SIMD3(0.75, 0.88, 1.0))
+            ghost.name = "bestGhost"
+            if let shroud = ghost.findEntity(named: "ghostShroud") {
+                shroud.isEnabled = true
+            }
+            worldRoot.addChild(ghost)
+            ghostEntity = ghost
+        }
+        ghostEntity?.isEnabled = true
+        ghostEntity?.position = path.worldPosition(progress: pose.progress, lateral: pose.lateral, height: pose.height)
+    }
+
+    private func syncAvalanche(engine: GameEngine, path: TrackPath) {
+        guard let wall = avalancheWall else { return }
+        wall.isEnabled = engine.avalancheThreat
+        guard engine.avalancheThreat else { return }
+        let pos = path.worldPosition(progress: engine.avalancheFront, lateral: 0, height: 1.6)
+        wall.position = pos
     }
 
     private func syncPeels(engine: GameEngine, path: TrackPath) {

@@ -27,12 +27,19 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func play(_ id: LevelID) {
+    func play(_ id: LevelID, daily: Bool = false) {
         guard persistence.isUnlocked(id) else { return }
         selectedLevel = id
         lastResult = nil
-        engine.start(level: LevelCatalog.level(id), settings: persistence.settings)
+        let ghost = persistence.settings.showGhost ? persistence.records[id]?.ghost : nil
+        engine.start(level: LevelCatalog.level(id), settings: persistence.settings, ghost: ghost, daily: daily)
         screen = .playing
+    }
+
+    func playDaily() {
+        let unlocked = LevelID.allCases.filter { persistence.isUnlocked($0) }
+        let pick = DailyChallenge.pick(unlocked: unlocked)
+        play(pick.level, daily: true)
     }
 
     func resume() {
@@ -67,8 +74,11 @@ final class AppModel: ObservableObject {
     }
 
     func handleFinished(_ result: RaceResult) {
-        lastResult = result
-        persistence.record(result)
+        var finished = result
+        let before = persistence.totalStars
+        persistence.record(finished, ghost: engine.capturedGhost())
+        finished.unlockedSkin = persistence.newlyUnlockedSkin(before: before, after: persistence.totalStars)
+        lastResult = finished
         persistence.persist()
         screen = .results
     }

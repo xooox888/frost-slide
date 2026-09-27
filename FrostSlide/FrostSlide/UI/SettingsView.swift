@@ -33,9 +33,44 @@ struct SettingsView: View {
                 toggle("Tilt steering", subtitle: "Add accelerometer lean on top of swipe.", key: \.tiltSteering)
                 toggle("Haptics", subtitle: "Taps for boost, collect, crash, and finish. Off when Reduce Motion is on.", key: \.hapticsEnabled)
                 toggle("Sound", subtitle: "Arcade blips. Silent switch and other audio are respected.", key: \.soundEnabled)
+                toggle("Best-run ghost", subtitle: "Race a translucent copy of your fastest line on this course.", key: \.showGhost)
                 #if DEBUG
                 toggle("Unlock all courses", subtitle: "DEBUG only — stripped from Release / App Store builds.", key: \.unlockAll)
                 #endif
+
+                Text("Sled skins")
+                    .font(.custom("AvenirNext-Heavy", size: 18))
+                    .foregroundStyle(FrostTheme.ink)
+                    .padding(.top, 6)
+                Text("Earn stars to unlock recolors. \(app.persistence.totalStars) stars collected.")
+                    .font(FrostTheme.captionFont)
+                    .foregroundStyle(FrostTheme.inkSoft)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 10)], spacing: 10) {
+                    ForEach(SledSkin.allCases) { skin in
+                        let open = app.persistence.isSkinUnlocked(skin)
+                        Button {
+                            guard open else { return }
+                            app.persistence.updateSettings { $0.selectedSkin = skin }
+                        } label: {
+                            VStack(spacing: 6) {
+                                Circle()
+                                    .fill(skin.swatch)
+                                    .frame(width: 28, height: 28)
+                                    .overlay(Circle().stroke(.white, lineWidth: app.persistence.settings.selectedSkin == skin ? 3 : 0))
+                                Text(open ? skin.title : "\(skin.starsRequired)★")
+                                    .font(.custom("AvenirNext-DemiBold", size: 11))
+                                    .foregroundStyle(FrostTheme.ink)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .fill(.white.opacity(open ? 0.85 : 0.45))
+                            )
+                        }
+                        .disabled(!open)
+                    }
+                }
 
                 Link(destination: AdConfig.privacyPolicyURL) {
                     HStack {

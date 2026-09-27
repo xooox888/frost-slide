@@ -111,6 +111,14 @@ enum WorldFactory {
         case .checkpoint: node = checkpointGate(width: sample.width)
         case .finish: node = finishGate(width: sample.width)
         case .startBanner: node = finishGate(width: sample.width)
+        case .flare: node = powerOrb(SIMD3(1.0, 0.92, 0.35), "flare")
+        case .avalanche: node = avalancheMarker()
+        case .shortcut: node = shortcutGate(width: sample.width)
+        case .movingBridge: node = movingBridge(width: sample.width)
+        case .geyser: node = geyser()
+        case .carnivalFloat: node = carnivalFloat()
+        case .neonArch: node = neonArchway(width: sample.width)
+        case .crystalSpire: node = crystalSpire(scale: entity.scale)
         }
         node.position = pos
         node.orientation = simd_quatf(angle: sample.heading + entity.yaw, axis: [0, 1, 0])
@@ -397,6 +405,83 @@ enum WorldFactory {
             root.addChild(pole)
         }
         return root
+    }
+
+    static func avalancheMarker() -> Entity {
+        Entity()
+    }
+
+    static func shortcutGate(width: Float) -> Entity {
+        let root = Entity()
+        for sign: Float in [-1, 1] {
+            let pole = RKEntity.model(
+                RKMesh.cylinder(radius: 0.1, height: 2.8),
+                RKMat.pbr(SIMD3(0.15, 0.95, 0.72), roughness: 0.25, emissive: SIMD3(0.1, 0.45, 0.32))
+            )
+            pole.position = [sign * 1.4, 1.4, 0]
+            root.addChild(pole)
+        }
+        let beam = RKEntity.box([3.1, 0.22, 0.18], SIMD3(0.2, 1.0, 0.75), roughness: 0.25)
+        beam.position.y = 2.7
+        root.addChild(beam)
+        _ = width
+        return root
+    }
+
+    static func movingBridge(width: Float) -> Entity {
+        let plank = RKEntity.box([width * 0.55, 0.22, 2.8], SIMD3(0.42, 0.28, 0.16), roughness: 0.7)
+        plank.position.y = 0.2
+        return plank
+    }
+
+    static func geyser() -> Entity {
+        let root = Entity()
+        let mound = RKEntity.model(RKMesh.cylinder(radius: 0.55, height: 0.28), RKMat.pbr(SIMD3(0.55, 0.48, 0.38), roughness: 0.8))
+        mound.position.y = 0.12
+        let steam = RKEntity.model(
+            RKMesh.cone(bottomRadius: 0.32, height: 1.6),
+            RKMat.pbr(SIMD3(0.92, 0.94, 0.96), roughness: 0.4, alpha: 0.28)
+        )
+        steam.position.y = 1.0
+        root.addChild(mound)
+        root.addChild(steam)
+        return root
+    }
+
+    static func carnivalFloat() -> Entity {
+        let root = Entity()
+        let body = RKEntity.box([2.4, 1.4, 1.6], SIMD3(0.95, 0.28, 0.48), roughness: 0.45)
+        body.position.y = 1.0
+        let dome = RKEntity.sphere(0.7, SIMD3(1.0, 0.82, 0.25), roughness: 0.25)
+        dome.position.y = 2.0
+        root.addChild(body)
+        root.addChild(dome)
+        return root
+    }
+
+    static func neonArchway(width: Float) -> Entity {
+        let root = Entity()
+        for sign: Float in [-1, 1] {
+            let pole = RKEntity.model(
+                RKMesh.cylinder(radius: 0.08, height: 3.4),
+                RKMat.pbr(SIMD3(1.0, 0.2, 0.72), roughness: 0.2, emissive: SIMD3(0.6, 0.1, 0.4))
+            )
+            pole.position = [sign * (width * 0.38), 1.7, 0]
+            root.addChild(pole)
+        }
+        let beam = RKEntity.box([width * 0.82, 0.16, 0.16], SIMD3(0.2, 0.95, 1.0), roughness: 0.15)
+        beam.position.y = 3.4
+        root.addChild(beam)
+        return root
+    }
+
+    static func crystalSpire(scale: Float) -> Entity {
+        let node = RKEntity.model(
+            RKMesh.cone(bottomRadius: 0.38 * scale, height: 2.6 * scale),
+            RKMat.pbr(SIMD3(0.45, 0.85, 1.0), roughness: 0.12, emissive: SIMD3(0.12, 0.35, 0.55))
+        )
+        node.position.y = 1.3 * scale
+        return node
     }
 
     static func finishGate(width: Float) -> Entity {

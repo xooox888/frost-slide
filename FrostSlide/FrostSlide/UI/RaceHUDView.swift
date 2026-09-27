@@ -14,6 +14,15 @@ struct RaceHUDView: View {
             topBar
             progressRail
             Spacer()
+            if hud.avalancheThreat {
+                Text("AVALANCHE")
+                    .font(.custom("AvenirNext-Heavy", size: 18))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(FrostTheme.berry.opacity(0.9)))
+                    .padding(.bottom, 8)
+            }
             if let count = hud.countdown {
                 countdownGlyph(count)
             } else if !hud.toast.isEmpty {
@@ -114,9 +123,11 @@ struct RaceHUDView: View {
                         .frame(width: 130 * CGFloat(GameMath.saturate(hud.turbo)), height: 14)
                 }
                 HStack(spacing: 6) {
+                    if hud.combo >= 2 { chip("x\(hud.combo)", FrostTheme.ochre) }
                     if hud.magnetActive { chip("Magnet", FrostTheme.ice) }
                     if hud.ghostActive { chip("Ghost", .white) }
                     if hud.rocketActive { chip("Rocket", FrostTheme.berry) }
+                    if hud.flareActive { chip("Flare", FrostTheme.ochre) }
                 }
             }
             Spacer()

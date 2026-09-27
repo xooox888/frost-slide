@@ -13,6 +13,7 @@
 		A1000000000000000000001E /* GamePersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* GamePersistence.swift */; };
 		A10000000000000000000020 /* AudioHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* AudioHaptics.swift */; };
 		A10000000000000000000022 /* LevelCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000021 /* LevelCatalog.swift */; };
+		A10000000000000000000067 /* Progression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000066 /* Progression.swift */; };
 		A10000000000000000000024 /* TrackPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000023 /* TrackPath.swift */; };
 		A10000000000000000000026 /* RacerSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000025 /* RacerSimulation.swift */; };
 		A10000000000000000000028 /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000027 /* GameEngine.swift */; };
@@ -53,6 +54,7 @@
 		A1000000000000000000001D /* GamePersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePersistence.swift; sourceTree = "<group>"; };
 		A1000000000000000000001F /* AudioHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioHaptics.swift; sourceTree = "<group>"; };
 		A10000000000000000000021 /* LevelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelCatalog.swift; sourceTree = "<group>"; };
+		A10000000000000000000066 /* Progression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Progression.swift; sourceTree = "<group>"; };
 		A10000000000000000000023 /* TrackPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPath.swift; sourceTree = "<group>"; };
 		A10000000000000000000025 /* RacerSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacerSimulation.swift; sourceTree = "<group>"; };
 		A10000000000000000000027 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 				A1000000000000000000001D /* GamePersistence.swift */,
 				A1000000000000000000001F /* AudioHaptics.swift */,
 				A10000000000000000000021 /* LevelCatalog.swift */,
+				A10000000000000000000066 /* Progression.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -313,6 +316,7 @@
 				A1000000000000000000001E /* GamePersistence.swift in Sources */,
 				A10000000000000000000020 /* AudioHaptics.swift in Sources */,
 				A10000000000000000000022 /* LevelCatalog.swift in Sources */,
+				A10000000000000000000067 /* Progression.swift in Sources */,
 				A10000000000000000000024 /* TrackPath.swift in Sources */,
 				A10000000000000000000026 /* RacerSimulation.swift in Sources */,
 				A10000000000000000000028 /* GameEngine.swift in Sources */,

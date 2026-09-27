@@ -32,6 +32,7 @@ struct Racer {
     var pitch: Float
     var squash: Float
     var trailBoost: Float
+    var flareTime: Float
 }
 
 struct LiveEntity {
@@ -43,12 +44,12 @@ struct LiveEntity {
 }
 
 enum RacerFactory {
-    static func player(startLateral: Float = 0) -> Racer {
+    static func player(startLateral: Float = 0, skin: SledSkin = .cyan) -> Racer {
         make(
             id: UUID(),
             name: "You",
             isPlayer: true,
-            color: SIMD3(0.12, 0.55, 1.0),
+            color: skin.color,
             personality: nil,
             skill: 1,
             lateral: startLateral
@@ -106,13 +107,17 @@ enum RacerFactory {
             roll: 0,
             pitch: 0,
             squash: 1,
-            trailBoost: 0
+            trailBoost: 0,
+            flareTime: 0
         )
     }
 }
 
 enum CollisionClass {
-    static let solidHazards: Set<PropKind> = [.snowman, .crate, .cart, .npc, .stalactite, .bridge, .barrel]
-    static let pickups: Set<PropKind> = [.crystal, .rocket, .magnet, .ghost, .banana]
+    static let solidHazards: Set<PropKind> = [
+        .snowman, .crate, .cart, .npc, .stalactite, .bridge, .barrel,
+        .movingBridge, .crystalSpire, .carnivalFloat, .geyser
+    ]
+    static let pickups: Set<PropKind> = [.crystal, .rocket, .magnet, .ghost, .banana, .flare]
     static let pads: Set<PropKind> = [.ramp, .turboPad]
 }

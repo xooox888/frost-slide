@@ -34,6 +34,23 @@ struct ResultsView: View {
                         stat("Time", FrostTheme.formatTime(result.time))
                         stat("Crystals", "\(result.crystals)/\(result.crystalTotal)")
                     }
+                    HStack(spacing: 18) {
+                        stat("Combo", "x\(max(1, result.comboMax))")
+                        stat("Near miss", "\(result.nearMisses)")
+                    }
+                    if let skin = result.unlockedSkin {
+                        Text("New sled: \(skin.title)")
+                            .font(.custom("AvenirNext-Bold", size: 16))
+                            .foregroundStyle(FrostTheme.iceDeep)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(.white.opacity(0.85)))
+                    }
+                    if result.daily {
+                        Text("Daily logged")
+                            .font(FrostTheme.captionFont)
+                            .foregroundStyle(FrostTheme.inkSoft)
+                    }
                     podium(result.podium)
                 }
                 VStack(spacing: 10) {

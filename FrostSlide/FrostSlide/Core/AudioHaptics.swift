@@ -75,6 +75,12 @@ final class AudioHaptics {
 
     func whoosh() {
         play("whoosh", volume: 0.6)
+        tap(.medium)
+    }
+
+    func comboHit() {
+        play("collect", volume: 0.45)
+        tap(.light)
     }
 
     func power() {

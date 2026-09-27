@@ -52,6 +52,9 @@ struct MainMenuView: View {
                     FrostButton(title: "Race", icon: "flag.checkered", color: FrostTheme.berry) {
                         app.screen = .levelSelect
                     }
+                    FrostButton(title: "Daily Challenge", icon: "calendar", color: FrostTheme.ochre, foreground: FrostTheme.ink) {
+                        app.playDaily()
+                    }
                     FrostButton(title: "Course Map", icon: "map.fill", color: FrostTheme.ice) {
                         app.screen = .levelSelect
                     }
