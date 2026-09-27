@@ -20,6 +20,7 @@ SWIFT_FILES = [
     "Core/GamePersistence.swift",
     "Core/AudioHaptics.swift",
     "Core/LevelCatalog.swift",
+    "Core/Progression.swift",
     "Engine/TrackPath.swift",
     "Engine/RacerSimulation.swift",
     "Engine/GameEngine.swift",

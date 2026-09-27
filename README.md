@@ -20,11 +20,16 @@ If SPM cannot resolve, File → Add Package Dependencies and paste the same GitH
 
 ## How to play
 
-- **Steer:** drag left/right. Optional tilt in Settings.
-- **Turbo:** hold **BOOST**. Crystals refill the meter.
+- **Steer:** drag left/right. Optional tilt in Settings. Steering is snappy; landings kill slide.
+- **Turbo:** hold **BOOST**. Crystals refill the meter. Near-misses and combo chains add a turbo crumb.
+- **Near miss / combo:** skim a hazard or chain crystals. HUD shows **xN**. The chain dies if you wait too long.
+- **Ghost:** a translucent copy of your best run on that course (Settings toggle).
+- **Flares:** night / blizzard pickups that punch a hole in the dark.
+- **Shortcuts:** cyan gates skip a bite of track. **Avalanche** walls chase you on later courses — stay ahead.
 - **Rewarded refill (optional):** if turbo is low, tap **REFILL** once per race to watch a video. Never forced.
 - **Peel:** pick up a banana, tap **PEEL** to slow rivals.
-- Finish a course to unlock the next.
+- Finish a course to unlock the next. Stars unlock sled skins in Settings.
+- **Daily Challenge** picks one unlocked course from the UTC date.
 
 Unlock-all exists only in **DEBUG** builds. Release / TestFlight / App Store binaries ignore it.
 
@@ -32,14 +37,49 @@ Unlock-all exists only in **DEBUG** builds. Release / TestFlight / App Store bin
 
 1 star for finishing. Extra stars from place, crystal target, and par time.
 
-### Courses
+### Courses (24, 8 worlds)
 
-1. **Village Dash** — ice-crystal arches, cyan trail, alpine streets  
-2. **Market Mayhem** — tight alleys, stalls, darting NPCs  
-3. **Ice Cave Spiral** — blue helix, stalactites  
-4. **Aurora Night** — night fog, glow pads  
-5. **Harbor Freeze** — docks; water = checkpoint + 3s  
-6. **Summit Rush** — steep jumps and wind  
+Early worlds are wide and forgiving. Later worlds tighten the lane, add moving bridges, shortcut gates, and avalanche chases. 3–5 AI rivals each. Rubber-band keeps packs readable without stealing the win.
+
+**Village & Market**
+1. Village Dash — ice-crystal arches, wide streets  
+2. Market Mayhem — alleys, stalls, carts  
+3. Alley Sprint — squeeze + first shortcut gate  
+
+**Ice Caves**
+4. Ice Cave Spiral — blue helix, stalactites  
+5. Crystal Grotto — spires and ice patches  
+6. Frozen Hollow — tight helix + avalanche  
+
+**Aurora Night**
+7. Aurora Night — glow pads, low visibility  
+8. Polar Veil — flares and a hidden cut  
+9. Midnight Ribbon — night chase + powder wall  
+
+**Harbor**
+10. Harbor Freeze — docks; water = checkpoint + 3s  
+11. Driftwood Docks — narrow planks + cut  
+12. Tide Gate — moving bridges  
+
+**Summit & Glacier**
+13. Summit Rush — steep jumps and wind  
+14. Glacier Drop — big air + high-line gate  
+15. Icefall Run — five rivals and a white wall  
+
+**Frozen Forest**
+16. Pine Whisper — soft forest carve  
+17. Timber Switchback — hairpins + gate  
+18. Owl Hollow — dark timber chase  
+
+**Canyon & Steam**
+19. Canyon Glow — crystal walls  
+20. Prism Cut — razor lane + skip  
+21. Steam Veil — geysers, mist, avalanche  
+
+**Storm & Spectacle**
+22. Whiteout Peak — blizzard + flares  
+23. Neon Slalom — resort arches + VIP gate  
+24. Carnival Parade — floats, lights, finale chase  
 
 ## Ads (AdMob)
 
@@ -111,6 +151,7 @@ FrostSlide/FrostSlide/
   App/                    Navigation + persistence
   Core/                   Levels, save data, audio/haptics
   Engine/                 Arcade spline sim (progress + lateral + air)
+  Core/Progression.swift  Worlds, sled skins, daily challenge, ghost takes
   Reality/                RealityKit world (WorldController, factories, meshes)
   UI/                     Menu, map, HUD, results, settings
   PrivacyInfo.xcprivacy   UserDefaults reason CA92.1

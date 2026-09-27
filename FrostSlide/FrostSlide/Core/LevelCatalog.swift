@@ -6,10 +6,28 @@ enum LevelCatalog {
         switch id {
         case .villageDash: return villageDash()
         case .marketMayhem: return marketMayhem()
+        case .alleySprint: return alleySprint()
         case .iceCaveSpiral: return iceCaveSpiral()
+        case .crystalGrotto: return crystalGrotto()
+        case .frozenHollow: return frozenHollow()
         case .auroraNight: return auroraNight()
+        case .polarVeil: return polarVeil()
+        case .midnightRibbon: return midnightRibbon()
         case .harborFreeze: return harborFreeze()
+        case .driftwoodDocks: return driftwoodDocks()
+        case .tideGate: return tideGate()
         case .summitRush: return summitRush()
+        case .glacierDrop: return glacierDrop()
+        case .icefallRun: return icefallRun()
+        case .pineWhisper: return pineWhisper()
+        case .timberSwitchback: return timberSwitchback()
+        case .owlHollow: return owlHollow()
+        case .canyonGlow: return canyonGlow()
+        case .prismCut: return prismCut()
+        case .steamVeil: return steamVeil()
+        case .whiteoutPeak: return whiteoutPeak()
+        case .neonSlalom: return neonSlalom()
+        case .carnivalParade: return carnivalParade()
         }
     }
 
@@ -21,8 +39,8 @@ enum LevelCatalog {
         let b = LevelBuilder(
             id: .villageDash,
             name: "Village Dash",
-            subtitle: "Ochre streets & stone arches",
-            blurb: "Race the first snowfall through a painted European town. Thread the arches, pop the yellow ramps, and don't let Pico dive-bomb your line.",
+            subtitle: "Ice-crystal arches & wide streets",
+            blurb: "Race the first snowfall through a painted alpine town. Thread the cyan arches, pop the ramps, and learn the carve.",
             theme: .village,
             palette: .village
         )
@@ -63,9 +81,9 @@ enum LevelCatalog {
         b.hazard(.crate, 0.86, lateral: 2)
         b.lineBuildings(every: 0.028)
         b.rivals([
-            .pico(skill: 1.02, lateral: -3.2),
-            .ruby(skill: 0.98, lateral: 3.4),
-            .violet(skill: 0.94, lateral: 0.6)
+            .pico(skill: 0.92, lateral: -3.2),
+            .ruby(skill: 0.90, lateral: 3.4),
+            .violet(skill: 0.88, lateral: 0.6)
         ])
         return b.build()
     }
@@ -119,10 +137,10 @@ enum LevelCatalog {
         b.hazard(.crate, 0.79, lateral: 2)
         b.lineMarket(every: 0.045)
         b.rivals([
-            .pico(skill: 1.04, lateral: -2.4),
-            .ruby(skill: 1.00, lateral: 2.6),
-            .violet(skill: 0.93, lateral: 0.2),
-            .navy(skill: 0.97, lateral: -0.8)
+            .pico(skill: 0.96, lateral: -2.4),
+            .ruby(skill: 0.94, lateral: 2.6),
+            .violet(skill: 0.90, lateral: 0.2),
+            .navy(skill: 0.93, lateral: -0.8)
         ])
         return b.build()
     }
@@ -326,12 +344,422 @@ enum LevelCatalog {
         b.hazard(.snowman, 0.80, lateral: 5)
         b.decorateSummit()
         b.rivals([
-            .pico(skill: 1.06, lateral: -4.0),
-            .ruby(skill: 1.03, lateral: 4.2),
+            .pico(skill: 1.04, lateral: -4.0),
+            .ruby(skill: 1.02, lateral: 4.2),
             .violet(skill: 0.95, lateral: 1.2),
             .navy(skill: 0.99, lateral: -1.6),
-            .amber(skill: 1.01, lateral: 0.2)
+            .amber(skill: 1.00, lateral: 0.2)
         ])
+        return b.build()
+    }
+
+    static func alleySprint() -> LevelDefinition {
+        let b = LevelBuilder(id: .alleySprint, name: "Alley Sprint", subtitle: "Squeeze + shortcut gates", blurb: "The market's back streets. Hit the cyan gate on the left for a dirty cut.", theme: .market, palette: .market)
+        b.length = 500; b.baseWidth = 10.4; b.slope = 0.105; b.parTime = 43; b.crystalStar = 26
+        b.curve(0.00, 0.16, yaw: 1.15); b.curve(0.16, 0.34, yaw: -1.35); b.curve(0.34, 0.52, yaw: 1.05)
+        b.curve(0.52, 0.72, yaw: -1.20); b.curve(0.72, 0.94, yaw: 0.80)
+        b.width(0.28, 8.2, span: 0.10); b.width(0.60, 7.8, span: 0.10)
+        b.ramp(0.22); b.ramp(0.58, lateral: 1.2); b.turbo(0.14); b.turbo(0.48); b.turbo(0.82)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 6)
+        b.crystalLane(0.20, 0.30, lateral: 2.0, count: 6)
+        b.crystalLane(0.36, 0.46, lateral: -2.2, count: 7)
+        b.crystalLane(0.56, 0.66, lateral: 1.4, count: 6)
+        b.crystalLane(0.76, 0.88, lateral: 0, count: 7)
+        b.power(.ghost, 0.18, lateral: -2.6); b.power(.magnet, 0.40, lateral: 2.8)
+        b.power(.banana, 0.62, lateral: 0); b.power(.rocket, 0.80, lateral: -1.6)
+        b.shortcut(0.41, lateral: -3.6, skip: 0.028)
+        b.hazard(.stall, 0.15, lateral: -3.8, radius: 1.0)
+        b.hazard(.crate, 0.26, lateral: 1.0); b.hazard(.npc, 0.33, lateral: 0, radius: 0.75)
+        b.hazard(.cart, 0.50, lateral: 0.6, radius: 1.1); b.hazard(.crate, 0.68, lateral: -1.2)
+        b.hazard(.npc, 0.77, lateral: 1.4, radius: 0.75); b.hazard(.stall, 0.88, lateral: 3.6, radius: 1.0)
+        b.lineMarket(every: 0.05)
+        b.rivals([.pico(skill: 0.98, lateral: -2.0), .ruby(skill: 0.95, lateral: 2.2), .coral(skill: 0.93, lateral: 0.2)])
+        return b.build()
+    }
+
+    static func crystalGrotto() -> LevelDefinition {
+        let b = LevelBuilder(id: .crystalGrotto, name: "Crystal Grotto", subtitle: "Spires & ice patches", blurb: "A glittering chamber. Spires split the lane; ice patches steal your grip.", theme: .canyon, palette: .canyon)
+        b.length = 590; b.baseWidth = 13.5; b.slope = 0.12; b.parTime = 45; b.crystalStar = 30
+        b.curve(0.00, 0.22, yaw: 0.85); b.curve(0.22, 0.48, yaw: -1.15); b.curve(0.48, 0.74, yaw: 1.05); b.curve(0.74, 1.00, yaw: -0.70)
+        b.width(0.36, 11.0, span: 0.12)
+        b.ramp(0.24); b.ramp(0.62, lateral: -1.5); b.turbo(0.16); b.turbo(0.44); b.turbo(0.78)
+        b.crystalLane(0.06, 0.16, lateral: 2.4, count: 7)
+        b.crystalLane(0.22, 0.34, lateral: -2.6, count: 7)
+        b.crystalLane(0.42, 0.54, lateral: 0, count: 8)
+        b.crystalLane(0.62, 0.74, lateral: 3.0, count: 7)
+        b.crystalLane(0.82, 0.92, lateral: -2.0, count: 7)
+        b.power(.magnet, 0.20, lateral: 0); b.power(.ghost, 0.48, lateral: -3.4)
+        b.power(.rocket, 0.70, lateral: 3.2); b.power(.flare, 0.86, lateral: 0)
+        for p in stride(from: Float(0.14), through: 0.88, by: 0.10) {
+            b.hazard(.crystalSpire, p, lateral: sin(p * 22) * 3.4, radius: 0.9)
+            b.hazard(.icePatch, p + 0.04, lateral: 0, radius: 3.0)
+        }
+        b.decorateCanyon()
+        b.rivals([.violet(skill: 1.00, lateral: 2.6), .pico(skill: 1.02, lateral: -2.4), .mint(skill: 0.96, lateral: 0.3)])
+        return b.build()
+    }
+
+    static func frozenHollow() -> LevelDefinition {
+        let b = LevelBuilder(id: .frozenHollow, name: "Frozen Hollow", subtitle: "Tight helix + avalanche", blurb: "The cave narrows and the ceiling lets go. Stay ahead of the white wall.", theme: .cave, palette: .cave)
+        b.length = 620; b.baseWidth = 11.2; b.slope = 0.14; b.parTime = 44; b.crystalStar = 31
+        b.curve(0.00, 1.00, yaw: 6.4)
+        b.width(0.24, 9.4, span: 0.10); b.width(0.58, 8.8, span: 0.12)
+        b.ramp(0.20); b.ramp(0.52); b.ramp(0.80)
+        b.turbo(0.12); b.turbo(0.40); b.turbo(0.68)
+        b.crystalLane(0.06, 0.16, lateral: 1.8, count: 7)
+        b.crystalLane(0.22, 0.34, lateral: -2.2, count: 7)
+        b.crystalLane(0.40, 0.50, lateral: 0, count: 7)
+        b.crystalLane(0.58, 0.70, lateral: 2.4, count: 7)
+        b.crystalLane(0.78, 0.90, lateral: -1.6, count: 8)
+        b.power(.ghost, 0.18, lateral: 0); b.power(.magnet, 0.46, lateral: -2.8)
+        b.power(.rocket, 0.64, lateral: 2.6); b.power(.banana, 0.84, lateral: 0)
+        b.avalanche(from: 0.52, to: 0.90, speed: 0.016)
+        for p in stride(from: Float(0.12), through: 0.88, by: 0.08) {
+            b.hazard(.stalactite, p, lateral: cos(p * 30) * 2.6, radius: 0.8)
+        }
+        b.decorateCave()
+        b.rivals([.pico(skill: 1.04, lateral: -2.2), .ruby(skill: 1.00, lateral: 2.4), .navy(skill: 0.97, lateral: 0.2), .violet(skill: 0.95, lateral: 1.0)])
+        return b.build()
+    }
+
+    static func polarVeil() -> LevelDefinition {
+        let b = LevelBuilder(id: .polarVeil, name: "Polar Veil", subtitle: "Flares & hidden cut", blurb: "Grab a flare or race blind. A shortcut hides under the left aurora.", theme: .aurora, palette: .aurora)
+        b.length = 600; b.baseWidth = 14.5; b.slope = 0.11; b.parTime = 45; b.crystalStar = 28
+        b.curve(0.04, 0.26, yaw: -1.05); b.curve(0.26, 0.50, yaw: 1.30); b.curve(0.50, 0.74, yaw: -1.15); b.curve(0.74, 0.96, yaw: 0.70)
+        b.ramp(0.20, lateral: 1.5); b.ramp(0.56); b.turbo(0.12); b.turbo(0.38); b.turbo(0.64); b.turbo(0.86)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 6)
+        b.crystalLane(0.22, 0.32, lateral: -3.0, count: 6)
+        b.crystalLane(0.40, 0.50, lateral: 3.2, count: 7)
+        b.crystalLane(0.58, 0.68, lateral: 0, count: 6)
+        b.crystalLane(0.80, 0.92, lateral: -2.2, count: 7)
+        b.power(.flare, 0.16, lateral: 3.6); b.power(.rocket, 0.34, lateral: 0)
+        b.power(.magnet, 0.52, lateral: -4); b.power(.ghost, 0.74, lateral: 4)
+        b.shortcut(0.47, lateral: -4.2, skip: 0.032)
+        b.hazard(.snowman, 0.18, lateral: 5); b.hazard(.crate, 0.36, lateral: -2)
+        b.hazard(.cart, 0.60, lateral: 0); b.hazard(.snowman, 0.78, lateral: -5)
+        b.decorateAurora()
+        b.rivals([.ruby(skill: 1.04, lateral: 2.8), .pico(skill: 1.00, lateral: -3.0), .amber(skill: 0.98, lateral: 0.6), .frost(skill: 0.96, lateral: -1.0)])
+        return b.build()
+    }
+
+    static func midnightRibbon() -> LevelDefinition {
+        let b = LevelBuilder(id: .midnightRibbon, name: "Midnight Ribbon", subtitle: "Night chase", blurb: "A thin glowing ribbon and an avalanche of powder at your back.", theme: .aurora, palette: .aurora)
+        b.length = 610; b.baseWidth = 12.8; b.slope = 0.12; b.parTime = 43; b.crystalStar = 29
+        b.curve(0.00, 0.20, yaw: 0.95); b.curve(0.20, 0.42, yaw: -1.40); b.curve(0.42, 0.66, yaw: 1.20); b.curve(0.66, 0.90, yaw: -0.85)
+        b.width(0.32, 10.2, span: 0.10); b.width(0.70, 9.8, span: 0.10)
+        b.ramp(0.18); b.ramp(0.50, lateral: -1.2); b.ramp(0.78)
+        b.turbo(0.10); b.turbo(0.36); b.turbo(0.62); b.turbo(0.84)
+        b.crystalLane(0.06, 0.14, lateral: 1.6, count: 6)
+        b.crystalLane(0.22, 0.32, lateral: -2.4, count: 7)
+        b.crystalLane(0.40, 0.50, lateral: 2.6, count: 7)
+        b.crystalLane(0.58, 0.68, lateral: 0, count: 6)
+        b.crystalLane(0.80, 0.90, lateral: -1.8, count: 7)
+        b.power(.flare, 0.14, lateral: -3.2); b.power(.ghost, 0.30, lateral: 0)
+        b.power(.rocket, 0.56, lateral: 3); b.power(.banana, 0.80, lateral: 0)
+        b.avalanche(from: 0.48, to: 0.92, speed: 0.017)
+        b.hazard(.crate, 0.24, lateral: 1.4); b.hazard(.snowman, 0.44, lateral: -4)
+        b.hazard(.crate, 0.66, lateral: 3); b.hazard(.snowman, 0.84, lateral: 0)
+        b.decorateAurora()
+        b.rivals([.pico(skill: 1.05, lateral: -2.6), .ruby(skill: 1.02, lateral: 2.8), .violet(skill: 0.97, lateral: 0.4), .frost(skill: 1.00, lateral: -0.8)])
+        return b.build()
+    }
+
+    static func driftwoodDocks() -> LevelDefinition {
+        let b = LevelBuilder(id: .driftwoodDocks, name: "Driftwood Docks", subtitle: "Narrow planks + cut", blurb: "Skip the long pier through the hanging gate if you dare the edge.", theme: .harbor, palette: .harbor)
+        b.length = 550; b.baseWidth = 11.0; b.slope = 0.095; b.parTime = 46; b.crystalStar = 24
+        b.curve(0.05, 0.26, yaw: 0.70); b.curve(0.26, 0.50, yaw: -1.05); b.curve(0.50, 0.74, yaw: 0.90); b.curve(0.74, 0.94, yaw: -0.55)
+        b.width(0.22, 7.6, span: 0.12); b.width(0.48, 7.0, span: 0.12); b.width(0.76, 7.8, span: 0.10)
+        b.ramp(0.30); b.ramp(0.64); b.turbo(0.18); b.turbo(0.46); b.turbo(0.80)
+        b.crystalLane(0.08, 0.16, lateral: 0, count: 5)
+        b.crystalLane(0.24, 0.34, lateral: 1.6, count: 6)
+        b.crystalLane(0.44, 0.54, lateral: -1.4, count: 6)
+        b.crystalLane(0.66, 0.80, lateral: 0, count: 7)
+        b.power(.ghost, 0.20, lateral: 2.0); b.power(.magnet, 0.40, lateral: -2.0)
+        b.power(.banana, 0.58, lateral: 0); b.power(.rocket, 0.76, lateral: 1.4)
+        b.shortcut(0.39, lateral: 3.4, skip: 0.026)
+        b.hazard(.crate, 0.16, lateral: 1); b.hazard(.cart, 0.36, lateral: 0)
+        b.hazard(.bridge, 0.56, lateral: 0, radius: 1.3); b.hazard(.crate, 0.72, lateral: -1.6)
+        for p in stride(from: Float(0.12), through: 0.90, by: 0.07) {
+            b.hazard(.water, p, lateral: -8.8, radius: 4.2)
+            b.hazard(.water, p + 0.02, lateral: 8.8, radius: 4.2)
+        }
+        b.decorateHarbor()
+        b.rivals([.navy(skill: 1.02, lateral: -2.0), .pico(skill: 1.00, lateral: 2.2), .violet(skill: 0.94, lateral: 0.3)])
+        return b.build()
+    }
+
+    static func tideGate() -> LevelDefinition {
+        let b = LevelBuilder(id: .tideGate, name: "Tide Gate", subtitle: "Moving bridges", blurb: "The harbor gates swing. Time the moving bridges or kiss the drink.", theme: .harbor, palette: .harbor)
+        b.length = 560; b.baseWidth = 10.6; b.slope = 0.10; b.parTime = 45; b.crystalStar = 25
+        b.curve(0.04, 0.28, yaw: 0.80); b.curve(0.28, 0.54, yaw: -1.10); b.curve(0.54, 0.80, yaw: 0.95); b.curve(0.80, 0.96, yaw: -0.50)
+        b.width(0.20, 7.4, span: 0.10); b.width(0.50, 6.8, span: 0.12); b.width(0.78, 7.6, span: 0.10)
+        b.ramp(0.26); b.ramp(0.60); b.turbo(0.14); b.turbo(0.42); b.turbo(0.74)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 5)
+        b.crystalLane(0.22, 0.32, lateral: 1.4, count: 6)
+        b.crystalLane(0.40, 0.50, lateral: -1.2, count: 6)
+        b.crystalLane(0.62, 0.74, lateral: 0.8, count: 6)
+        b.crystalLane(0.82, 0.90, lateral: 0, count: 5)
+        b.power(.ghost, 0.18, lateral: 1.8); b.power(.magnet, 0.36, lateral: -1.8)
+        b.power(.rocket, 0.58, lateral: 0); b.power(.banana, 0.80, lateral: 1.2)
+        b.hazard(.movingBridge, 0.24, lateral: 0, radius: 1.5)
+        b.hazard(.movingBridge, 0.48, lateral: 0, radius: 1.5)
+        b.hazard(.movingBridge, 0.72, lateral: 0, radius: 1.5)
+        b.hazard(.crate, 0.34, lateral: 1.2); b.hazard(.cart, 0.64, lateral: -0.6)
+        for p in stride(from: Float(0.10), through: 0.92, by: 0.06) {
+            b.hazard(.water, p, lateral: -8.4, radius: 4.0)
+            b.hazard(.water, p + 0.02, lateral: 8.4, radius: 4.0)
+        }
+        b.decorateHarbor()
+        b.rivals([.navy(skill: 1.04, lateral: -1.8), .pico(skill: 1.02, lateral: 2.0), .coral(skill: 0.98, lateral: 0.2), .violet(skill: 0.95, lateral: 1.0)])
+        return b.build()
+    }
+
+    static func glacierDrop() -> LevelDefinition {
+        let b = LevelBuilder(id: .glacierDrop, name: "Glacier Drop", subtitle: "Big air + cut", blurb: "A hanging glacier with a high-line shortcut over the crevasse.", theme: .summit, palette: .summit)
+        b.length = 660; b.baseWidth = 17.0; b.slope = 0.17; b.parTime = 39; b.crystalStar = 32
+        b.curve(0.04, 0.22, yaw: 0.55); b.curve(0.22, 0.44, yaw: -0.85); b.curve(0.44, 0.66, yaw: 1.00); b.curve(0.66, 0.90, yaw: -0.60)
+        b.elevation(0.20, height: 4.2, span: 0.07); b.elevation(0.48, height: 6.4, span: 0.09); b.elevation(0.74, height: 5.0, span: 0.08)
+        b.ramp(0.18); b.ramp(0.46); b.ramp(0.72)
+        b.turbo(0.10); b.turbo(0.32); b.turbo(0.56); b.turbo(0.84)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 6)
+        b.crystalLane(0.24, 0.34, lateral: 4.2, count: 7)
+        b.crystalLane(0.42, 0.52, lateral: -3.8, count: 8)
+        b.crystalLane(0.60, 0.70, lateral: 2.0, count: 7)
+        b.crystalLane(0.80, 0.92, lateral: 0, count: 8)
+        b.power(.rocket, 0.16, lateral: 0); b.power(.magnet, 0.38, lateral: -5)
+        b.power(.ghost, 0.58, lateral: 5); b.power(.banana, 0.78, lateral: 0)
+        b.shortcut(0.50, lateral: 5.4, skip: 0.034)
+        b.hazard(.wind, 0.28, lateral: 0, radius: 8); b.hazard(.wind, 0.62, lateral: 0, radius: 8)
+        b.hazard(.snowman, 0.14, lateral: -6); b.hazard(.crate, 0.36, lateral: 3)
+        b.hazard(.snowman, 0.68, lateral: 6)
+        b.decorateSummit()
+        b.rivals([.pico(skill: 1.06, lateral: -3.8), .ruby(skill: 1.04, lateral: 4.0), .amber(skill: 1.01, lateral: 0.4), .navy(skill: 0.98, lateral: -1.4)])
+        return b.build()
+    }
+
+    static func icefallRun() -> LevelDefinition {
+        let b = LevelBuilder(id: .icefallRun, name: "Icefall Run", subtitle: "Steep + white wall", blurb: "The icefall calves. Five rivals and an avalanche share the face.", theme: .summit, palette: .summit)
+        b.length = 680; b.baseWidth = 16.0; b.slope = 0.18; b.parTime = 38; b.crystalStar = 33
+        b.curve(0.02, 0.20, yaw: 0.40); b.curve(0.20, 0.40, yaw: -0.80); b.curve(0.40, 0.62, yaw: 1.05); b.curve(0.62, 0.82, yaw: -0.90); b.curve(0.82, 0.98, yaw: 0.45)
+        b.elevation(0.24, height: 5.0, span: 0.07); b.elevation(0.52, height: 7.2, span: 0.10); b.elevation(0.76, height: 4.6, span: 0.07)
+        b.ramp(0.22); b.ramp(0.50); b.ramp(0.74)
+        b.turbo(0.10); b.turbo(0.34); b.turbo(0.58); b.turbo(0.82)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 6)
+        b.crystalLane(0.22, 0.32, lateral: 3.8, count: 7)
+        b.crystalLane(0.40, 0.50, lateral: -3.4, count: 8)
+        b.crystalLane(0.58, 0.68, lateral: 2.2, count: 7)
+        b.crystalLane(0.80, 0.92, lateral: 0, count: 8)
+        b.power(.rocket, 0.16, lateral: 0); b.power(.ghost, 0.36, lateral: 4.5)
+        b.power(.magnet, 0.54, lateral: -4.5); b.power(.banana, 0.70, lateral: 0); b.power(.rocket, 0.88, lateral: 2)
+        b.avalanche(from: 0.46, to: 0.94, speed: 0.019)
+        b.hazard(.wind, 0.30, lateral: 0, radius: 8); b.hazard(.wind, 0.64, lateral: 0, radius: 8)
+        b.hazard(.snowman, 0.18, lateral: 6); b.hazard(.crate, 0.42, lateral: -3)
+        b.decorateSummit()
+        b.rivals([.pico(skill: 1.08, lateral: -4.0), .ruby(skill: 1.06, lateral: 4.2), .amber(skill: 1.03, lateral: 0.2), .navy(skill: 1.00, lateral: -1.6), .frost(skill: 1.04, lateral: 1.4)])
+        return b.build()
+    }
+
+    static func pineWhisper() -> LevelDefinition {
+        let b = LevelBuilder(id: .pineWhisper, name: "Pine Whisper", subtitle: "Soft forest carve", blurb: "A quiet pine corridor. Wide enough to breathe, tight enough to learn the woods.", theme: .forest, palette: .forest)
+        b.length = 570; b.baseWidth = 15.0; b.slope = 0.11; b.parTime = 44; b.crystalStar = 28
+        b.curve(0.04, 0.24, yaw: 0.75); b.curve(0.24, 0.48, yaw: -1.00); b.curve(0.48, 0.72, yaw: 0.90); b.curve(0.72, 0.94, yaw: -0.60)
+        b.ramp(0.22); b.ramp(0.54, lateral: 1.6); b.turbo(0.14); b.turbo(0.40); b.turbo(0.76)
+        b.crystalLane(0.08, 0.16, lateral: 0, count: 6)
+        b.crystalLane(0.24, 0.34, lateral: 3.0, count: 7)
+        b.crystalLane(0.42, 0.52, lateral: -2.8, count: 7)
+        b.crystalLane(0.60, 0.70, lateral: 1.4, count: 6)
+        b.crystalLane(0.80, 0.90, lateral: 0, count: 7)
+        b.power(.magnet, 0.20, lateral: 4); b.power(.ghost, 0.46, lateral: -4)
+        b.power(.banana, 0.64, lateral: 0); b.power(.rocket, 0.84, lateral: 2)
+        b.hazard(.snowman, 0.18, lateral: -5); b.hazard(.crate, 0.36, lateral: 2)
+        b.hazard(.snowman, 0.58, lateral: 5); b.hazard(.crate, 0.78, lateral: -2)
+        b.decorateForest()
+        b.rivals([.mint(skill: 1.02, lateral: -3.0), .pico(skill: 1.00, lateral: 3.2), .violet(skill: 0.95, lateral: 0.4)])
+        return b.build()
+    }
+
+    static func timberSwitchback() -> LevelDefinition {
+        let b = LevelBuilder(id: .timberSwitchback, name: "Timber Switchback", subtitle: "Hairpins + gate", blurb: "Stacked hairpins through old timber. Cut the last switch if you clip the gate.", theme: .forest, palette: .forest)
+        b.length = 600; b.baseWidth = 13.0; b.slope = 0.125; b.parTime = 44; b.crystalStar = 30
+        b.curve(0.00, 0.16, yaw: 1.35); b.curve(0.16, 0.34, yaw: -1.55); b.curve(0.34, 0.52, yaw: 1.40)
+        b.curve(0.52, 0.70, yaw: -1.45); b.curve(0.70, 0.88, yaw: 1.10)
+        b.width(0.24, 10.4, span: 0.08); b.width(0.56, 9.8, span: 0.08)
+        b.ramp(0.28); b.ramp(0.66); b.turbo(0.12); b.turbo(0.38); b.turbo(0.62); b.turbo(0.84)
+        b.crystalLane(0.06, 0.14, lateral: 2.0, count: 6)
+        b.crystalLane(0.20, 0.30, lateral: -2.4, count: 7)
+        b.crystalLane(0.38, 0.48, lateral: 2.2, count: 7)
+        b.crystalLane(0.56, 0.66, lateral: -1.8, count: 6)
+        b.crystalLane(0.78, 0.90, lateral: 0, count: 8)
+        b.power(.ghost, 0.18, lateral: 0); b.power(.magnet, 0.42, lateral: 3.4)
+        b.power(.rocket, 0.60, lateral: -3.2); b.power(.banana, 0.82, lateral: 0)
+        b.shortcut(0.71, lateral: -3.8, skip: 0.030)
+        b.hazard(.crate, 0.16, lateral: 1.2); b.hazard(.snowman, 0.32, lateral: -4)
+        b.hazard(.crate, 0.50, lateral: 3); b.hazard(.snowman, 0.74, lateral: 4)
+        b.decorateForest()
+        b.rivals([.mint(skill: 1.04, lateral: -2.6), .pico(skill: 1.02, lateral: 2.8), .ruby(skill: 0.98, lateral: 0.2), .navy(skill: 0.96, lateral: -0.8)])
+        return b.build()
+    }
+
+    static func owlHollow() -> LevelDefinition {
+        let b = LevelBuilder(id: .owlHollow, name: "Owl Hollow", subtitle: "Dark timber chase", blurb: "Night forest. Flares help. The hollow coughs an avalanche of snow.", theme: .forest, palette: .forestNight)
+        b.length = 620; b.baseWidth = 12.4; b.slope = 0.13; b.parTime = 43; b.crystalStar = 30
+        b.curve(0.04, 0.26, yaw: 1.10); b.curve(0.26, 0.50, yaw: -1.25); b.curve(0.50, 0.74, yaw: 1.15); b.curve(0.74, 0.96, yaw: -0.80)
+        b.width(0.40, 10.0, span: 0.10)
+        b.ramp(0.20); b.ramp(0.48); b.ramp(0.76)
+        b.turbo(0.12); b.turbo(0.36); b.turbo(0.60); b.turbo(0.84)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 6)
+        b.crystalLane(0.22, 0.32, lateral: 2.6, count: 7)
+        b.crystalLane(0.40, 0.50, lateral: -2.4, count: 7)
+        b.crystalLane(0.58, 0.68, lateral: 1.6, count: 6)
+        b.crystalLane(0.80, 0.92, lateral: 0, count: 8)
+        b.power(.flare, 0.16, lateral: 3.2); b.power(.ghost, 0.34, lateral: 0)
+        b.power(.rocket, 0.56, lateral: -3); b.power(.magnet, 0.78, lateral: 3)
+        b.avalanche(from: 0.54, to: 0.92, speed: 0.017)
+        b.hazard(.snowman, 0.18, lateral: -5); b.hazard(.crate, 0.38, lateral: 2)
+        b.hazard(.snowman, 0.64, lateral: 5); b.hazard(.crate, 0.82, lateral: -2)
+        b.decorateForest()
+        b.rivals([.mint(skill: 1.06, lateral: -2.8), .pico(skill: 1.04, lateral: 3.0), .frost(skill: 1.02, lateral: 0.2), .violet(skill: 0.98, lateral: -1.0)])
+        return b.build()
+    }
+
+    static func canyonGlow() -> LevelDefinition {
+        let b = LevelBuilder(id: .canyonGlow, name: "Canyon Glow", subtitle: "Crystal walls", blurb: "A glowing slot canyon. Spires force you to pick a wall.", theme: .canyon, palette: .canyon)
+        b.length = 600; b.baseWidth = 12.6; b.slope = 0.13; b.parTime = 43; b.crystalStar = 31
+        b.curve(0.00, 0.22, yaw: 0.70); b.curve(0.22, 0.46, yaw: -1.20); b.curve(0.46, 0.70, yaw: 1.10); b.curve(0.70, 0.94, yaw: -0.75)
+        b.width(0.30, 10.0, span: 0.10); b.width(0.64, 9.6, span: 0.10)
+        b.ramp(0.24); b.ramp(0.58); b.turbo(0.12); b.turbo(0.40); b.turbo(0.72)
+        b.crystalLane(0.06, 0.16, lateral: 2.2, count: 7)
+        b.crystalLane(0.22, 0.32, lateral: -2.4, count: 7)
+        b.crystalLane(0.40, 0.50, lateral: 0, count: 8)
+        b.crystalLane(0.58, 0.68, lateral: 2.8, count: 7)
+        b.crystalLane(0.80, 0.90, lateral: -2.0, count: 7)
+        b.power(.magnet, 0.18, lateral: 0); b.power(.ghost, 0.44, lateral: -3)
+        b.power(.rocket, 0.66, lateral: 3); b.power(.flare, 0.84, lateral: 0)
+        for p in stride(from: Float(0.14), through: 0.86, by: 0.09) {
+            b.hazard(.crystalSpire, p, lateral: (Int(p * 20) % 2 == 0) ? -2.8 : 2.8, radius: 0.95)
+        }
+        b.decorateCanyon()
+        b.rivals([.frost(skill: 1.06, lateral: 2.4), .pico(skill: 1.04, lateral: -2.6), .ruby(skill: 1.00, lateral: 0.4), .mint(skill: 0.98, lateral: -0.8)])
+        return b.build()
+    }
+
+    static func prismCut() -> LevelDefinition {
+        let b = LevelBuilder(id: .prismCut, name: "Prism Cut", subtitle: "Razor lane + gate", blurb: "The canyon pinches to a prism. The right wall hides a skip.", theme: .canyon, palette: .canyon)
+        b.length = 610; b.baseWidth = 11.0; b.slope = 0.14; b.parTime = 42; b.crystalStar = 32
+        b.curve(0.00, 0.18, yaw: 1.05); b.curve(0.18, 0.40, yaw: -1.35); b.curve(0.40, 0.64, yaw: 1.25); b.curve(0.64, 0.90, yaw: -0.95)
+        b.width(0.26, 8.6, span: 0.10); b.width(0.54, 8.2, span: 0.10); b.width(0.78, 9.0, span: 0.08)
+        b.ramp(0.22); b.ramp(0.52, lateral: -1); b.ramp(0.80)
+        b.turbo(0.10); b.turbo(0.36); b.turbo(0.62); b.turbo(0.86)
+        b.crystalLane(0.06, 0.14, lateral: 1.6, count: 6)
+        b.crystalLane(0.20, 0.30, lateral: -2.0, count: 7)
+        b.crystalLane(0.38, 0.48, lateral: 2.2, count: 7)
+        b.crystalLane(0.56, 0.66, lateral: 0, count: 7)
+        b.crystalLane(0.78, 0.90, lateral: -1.6, count: 8)
+        b.power(.ghost, 0.16, lateral: 0); b.power(.magnet, 0.40, lateral: 2.6)
+        b.power(.rocket, 0.58, lateral: -2.6); b.power(.banana, 0.82, lateral: 0)
+        b.shortcut(0.45, lateral: 3.6, skip: 0.033)
+        for p in stride(from: Float(0.12), through: 0.88, by: 0.08) {
+            b.hazard(.crystalSpire, p, lateral: sin(p * 26) * 2.4, radius: 0.85)
+        }
+        b.decorateCanyon()
+        b.rivals([.frost(skill: 1.08, lateral: 2.2), .pico(skill: 1.06, lateral: -2.4), .amber(skill: 1.02, lateral: 0.2), .navy(skill: 1.00, lateral: -0.8)])
+        return b.build()
+    }
+
+    static func steamVeil() -> LevelDefinition {
+        let b = LevelBuilder(id: .steamVeil, name: "Steam Veil", subtitle: "Geysers & mist", blurb: "Hot springs under snow. Geysers hide the line; an avalanche rides the steam.", theme: .steam, palette: .steam)
+        b.length = 590; b.baseWidth = 13.2; b.slope = 0.12; b.parTime = 43; b.crystalStar = 29
+        b.curve(0.04, 0.26, yaw: 0.80); b.curve(0.26, 0.50, yaw: -1.10); b.curve(0.50, 0.74, yaw: 1.00); b.curve(0.74, 0.94, yaw: -0.65)
+        b.ramp(0.22); b.ramp(0.56); b.turbo(0.14); b.turbo(0.40); b.turbo(0.70); b.turbo(0.88)
+        b.crystalLane(0.08, 0.16, lateral: 0, count: 6)
+        b.crystalLane(0.24, 0.34, lateral: 2.8, count: 7)
+        b.crystalLane(0.42, 0.52, lateral: -2.6, count: 7)
+        b.crystalLane(0.60, 0.70, lateral: 1.6, count: 6)
+        b.crystalLane(0.80, 0.90, lateral: 0, count: 7)
+        b.power(.ghost, 0.18, lateral: 3); b.power(.magnet, 0.38, lateral: -3)
+        b.power(.rocket, 0.62, lateral: 0); b.power(.flare, 0.80, lateral: 2.4)
+        b.avalanche(from: 0.56, to: 0.92, speed: 0.016)
+        for p in stride(from: Float(0.14), through: 0.86, by: 0.08) {
+            b.hazard(.geyser, p, lateral: sin(p * 18) * 3.0, radius: 1.15)
+        }
+        b.hazard(.crate, 0.30, lateral: 2); b.hazard(.snowman, 0.68, lateral: -4)
+        b.decorateSteam()
+        b.rivals([.coral(skill: 1.06, lateral: -2.6), .pico(skill: 1.04, lateral: 2.8), .ruby(skill: 1.02, lateral: 0.3), .mint(skill: 0.99, lateral: -1.0)])
+        return b.build()
+    }
+
+    static func whiteoutPeak() -> LevelDefinition {
+        let b = LevelBuilder(id: .whiteoutPeak, name: "Whiteout Peak", subtitle: "Blizzard + flares", blurb: "You cannot see the mountain. Flares punch holes in the white. Keep moving.", theme: .blizzard, palette: .blizzard)
+        b.length = 640; b.baseWidth = 14.0; b.slope = 0.155; b.parTime = 40; b.crystalStar = 32
+        b.curve(0.02, 0.20, yaw: 0.60); b.curve(0.20, 0.42, yaw: -1.00); b.curve(0.42, 0.64, yaw: 1.15); b.curve(0.64, 0.86, yaw: -0.85)
+        b.elevation(0.28, height: 4.0, span: 0.07); b.elevation(0.58, height: 5.6, span: 0.08)
+        b.ramp(0.20); b.ramp(0.46); b.ramp(0.74)
+        b.turbo(0.10); b.turbo(0.34); b.turbo(0.58); b.turbo(0.82)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 6)
+        b.crystalLane(0.22, 0.32, lateral: 3.4, count: 7)
+        b.crystalLane(0.40, 0.50, lateral: -3.2, count: 8)
+        b.crystalLane(0.60, 0.70, lateral: 1.8, count: 7)
+        b.crystalLane(0.80, 0.90, lateral: 0, count: 8)
+        b.power(.flare, 0.12, lateral: -3.6); b.power(.flare, 0.36, lateral: 3.6)
+        b.power(.rocket, 0.52, lateral: 0); b.power(.ghost, 0.70, lateral: -4); b.power(.magnet, 0.86, lateral: 3)
+        b.avalanche(from: 0.50, to: 0.94, speed: 0.020)
+        b.hazard(.wind, 0.26, lateral: 0, radius: 9); b.hazard(.wind, 0.54, lateral: 0, radius: 9)
+        b.hazard(.wind, 0.78, lateral: 0, radius: 9)
+        b.hazard(.snowman, 0.18, lateral: 5); b.hazard(.crate, 0.44, lateral: -2)
+        b.decorateBlizzard()
+        b.rivals([.frost(skill: 1.10, lateral: -3.4), .pico(skill: 1.08, lateral: 3.6), .ruby(skill: 1.05, lateral: 0.4), .amber(skill: 1.03, lateral: -1.2), .navy(skill: 1.01, lateral: 1.6)])
+        return b.build()
+    }
+
+    static func neonSlalom() -> LevelDefinition {
+        let b = LevelBuilder(id: .neonSlalom, name: "Neon Slalom", subtitle: "Resort gates + cut", blurb: "A night ski resort painted in cyan and magenta. Slalom the arches; clip the VIP gate.", theme: .neon, palette: .neon)
+        b.length = 600; b.baseWidth = 13.6; b.slope = 0.135; b.parTime = 41; b.crystalStar = 31
+        b.curve(0.00, 0.18, yaw: 1.10); b.curve(0.18, 0.38, yaw: -1.30); b.curve(0.38, 0.58, yaw: 1.20)
+        b.curve(0.58, 0.78, yaw: -1.15); b.curve(0.78, 0.96, yaw: 0.70)
+        b.width(0.28, 10.6, span: 0.08); b.width(0.62, 10.2, span: 0.08)
+        b.ramp(0.20); b.ramp(0.50, lateral: 1.4); b.ramp(0.78)
+        b.turbo(0.10); b.turbo(0.34); b.turbo(0.58); b.turbo(0.84)
+        b.crystalLane(0.06, 0.14, lateral: 2.0, count: 6)
+        b.crystalLane(0.20, 0.30, lateral: -2.4, count: 7)
+        b.crystalLane(0.38, 0.48, lateral: 2.2, count: 7)
+        b.crystalLane(0.56, 0.66, lateral: -1.8, count: 7)
+        b.crystalLane(0.78, 0.90, lateral: 0, count: 8)
+        b.power(.rocket, 0.16, lateral: 0); b.power(.flare, 0.32, lateral: 3.4)
+        b.power(.ghost, 0.54, lateral: -3.4); b.power(.magnet, 0.74, lateral: 0); b.power(.banana, 0.88, lateral: 2)
+        b.shortcut(0.43, lateral: 4.0, skip: 0.031)
+        for p in stride(from: Float(0.12), through: 0.88, by: 0.08) {
+            b.hazard(.neonArch, p, lateral: 0, radius: 0)
+        }
+        b.hazard(.crate, 0.26, lateral: 1.6); b.hazard(.cart, 0.60, lateral: 0)
+        b.decorateNeon()
+        b.rivals([.coral(skill: 1.10, lateral: -2.8), .pico(skill: 1.08, lateral: 3.0), .ruby(skill: 1.06, lateral: 0.2), .amber(skill: 1.03, lateral: -1.2)])
+        return b.build()
+    }
+
+    static func carnivalParade() -> LevelDefinition {
+        let b = LevelBuilder(id: .carnivalParade, name: "Carnival Parade", subtitle: "Festive finale", blurb: "Floats, lights, and a late avalanche of confetti-snow. The pack is hungry.", theme: .carnival, palette: .carnival)
+        b.length = 630; b.baseWidth = 14.8; b.slope = 0.14; b.parTime = 40; b.crystalStar = 34
+        b.curve(0.02, 0.20, yaw: 0.85); b.curve(0.20, 0.40, yaw: -1.15); b.curve(0.40, 0.62, yaw: 1.20)
+        b.curve(0.62, 0.82, yaw: -1.00); b.curve(0.82, 0.98, yaw: 0.55)
+        b.ramp(0.18); b.ramp(0.44, lateral: -1.4); b.ramp(0.70)
+        b.turbo(0.10); b.turbo(0.32); b.turbo(0.54); b.turbo(0.76); b.turbo(0.90)
+        b.crystalLane(0.06, 0.14, lateral: 0, count: 7)
+        b.crystalLane(0.20, 0.30, lateral: 3.2, count: 7)
+        b.crystalLane(0.38, 0.48, lateral: -3.0, count: 8)
+        b.crystalLane(0.56, 0.66, lateral: 2.0, count: 7)
+        b.crystalLane(0.78, 0.90, lateral: 0, count: 8)
+        b.power(.rocket, 0.14, lateral: 0); b.power(.magnet, 0.30, lateral: 4)
+        b.power(.ghost, 0.48, lateral: -4); b.power(.flare, 0.64, lateral: 0); b.power(.banana, 0.82, lateral: 3)
+        b.avalanche(from: 0.58, to: 0.95, speed: 0.018)
+        b.shortcut(0.36, lateral: -4.6, skip: 0.028)
+        for p in stride(from: Float(0.12), through: 0.86, by: 0.10) {
+            b.hazard(.carnivalFloat, p, lateral: (Int(p * 16) % 2 == 0) ? -5.2 : 5.2, radius: 1.3)
+        }
+        b.hazard(.npc, 0.22, lateral: 0.8, radius: 0.8)
+        b.hazard(.npc, 0.50, lateral: -1.0, radius: 0.8)
+        b.hazard(.cart, 0.68, lateral: 0)
+        b.decorateCarnival()
+        b.rivals([.coral(skill: 1.12, lateral: -3.2), .pico(skill: 1.10, lateral: 3.4), .ruby(skill: 1.08, lateral: 0.2), .amber(skill: 1.06, lateral: -1.4), .frost(skill: 1.09, lateral: 1.6)])
         return b.build()
     }
 }
@@ -353,6 +781,7 @@ final class LevelBuilder {
     var elevations: [ElevKey] = []
     var entities: [PlacedEntity] = []
     var rivalConfigs: [RivalConfig] = []
+    var events: [CourseEvent] = []
 
     init(
         id: LevelID,
@@ -410,6 +839,7 @@ final class LevelBuilder {
         case .magnet: kind = .magnet
         case .ghost: kind = .ghost
         case .banana: kind = .banana
+        case .flare: kind = .flare
         }
         entities.append(PlacedEntity(kind: kind, progress: progress, lateral: lateral, scale: 1, radius: 0.95))
     }
@@ -420,6 +850,16 @@ final class LevelBuilder {
 
     func rivals(_ list: [RivalConfig]) {
         rivalConfigs = list
+    }
+
+    func avalanche(from: Float, to: Float, speed: Float = 0.018) {
+        events.append(CourseEvent(kind: .avalanche, start: from, end: to, lateral: 0, magnitude: speed))
+        entities.append(PlacedEntity(kind: .avalanche, progress: from, lateral: 0, scale: 1, radius: 12))
+    }
+
+    func shortcut(_ progress: Float, lateral: Float, skip: Float = 0.03) {
+        events.append(CourseEvent(kind: .shortcut, start: progress, end: progress + 0.02, lateral: lateral, magnitude: skip))
+        entities.append(PlacedEntity(kind: .shortcut, progress: progress, lateral: lateral, scale: 1, radius: 1.55))
     }
 
     func lineBuildings(every step: Float) {
@@ -540,8 +980,54 @@ final class LevelBuilder {
             checkpoints: [0.0, 0.25, 0.50, 0.75],
             parTime: parTime,
             crystalTarget: crystals,
-            crystalStar: crystalStar
+            crystalStar: crystalStar,
+            events: events
         )
+    }
+
+    func decorateForest() {
+        for p in stride(from: Float(0.04), through: 0.96, by: 0.045) {
+            entities.append(PlacedEntity(kind: .pine, progress: p, lateral: -10 - Float.random(in: 0...2.4), scale: Float.random(in: 0.95...1.5), radius: 0))
+            entities.append(PlacedEntity(kind: .pine, progress: p + 0.02, lateral: 10 + Float.random(in: 0...2.4), scale: Float.random(in: 0.95...1.5), radius: 0))
+        }
+        for p in stride(from: Float(0.10), through: 0.90, by: 0.14) {
+            entities.append(PlacedEntity(kind: .lantern, progress: p, lateral: (Int(p * 18) % 2 == 0) ? -6.4 : 6.4, scale: 1, radius: 0))
+        }
+    }
+
+    func decorateCanyon() {
+        for p in stride(from: Float(0.06), through: 0.94, by: 0.06) {
+            entities.append(PlacedEntity(kind: .crystalSpire, progress: p, lateral: -8.5, scale: 1.3, radius: 0))
+            entities.append(PlacedEntity(kind: .crystalSpire, progress: p + 0.03, lateral: 8.5, scale: 1.4, radius: 0))
+        }
+    }
+
+    func decorateSteam() {
+        for p in stride(from: Float(0.08), through: 0.92, by: 0.07) {
+            entities.append(PlacedEntity(kind: .geyser, progress: p, lateral: (Int(p * 12) % 2 == 0) ? -7 : 7, scale: 1, radius: 0))
+            entities.append(PlacedEntity(kind: .pine, progress: p, lateral: -12, scale: 0.9, radius: 0))
+        }
+    }
+
+    func decorateBlizzard() {
+        decorateSummit()
+        for p in stride(from: Float(0.10), through: 0.90, by: 0.10) {
+            entities.append(PlacedEntity(kind: .wind, progress: p, lateral: 0, scale: 1, radius: 0))
+        }
+    }
+
+    func decorateNeon() {
+        for p in stride(from: Float(0.08), through: 0.92, by: 0.07) {
+            entities.append(PlacedEntity(kind: .neonArch, progress: p, lateral: 0, scale: 1, radius: 0))
+            entities.append(PlacedEntity(kind: .lantern, progress: p, lateral: (Int(p * 16) % 2 == 0) ? -7.2 : 7.2, scale: 1, radius: 0))
+        }
+    }
+
+    func decorateCarnival() {
+        for p in stride(from: Float(0.07), through: 0.93, by: 0.08) {
+            entities.append(PlacedEntity(kind: .carnivalFloat, progress: p, lateral: (Int(p * 10) % 2 == 0) ? -9 : 9, scale: 1, radius: 0))
+            entities.append(PlacedEntity(kind: .lantern, progress: p + 0.03, lateral: (Int(p * 14) % 2 == 0) ? -6 : 6, scale: 1, radius: 0))
+        }
     }
 }
 
@@ -647,6 +1133,125 @@ extension LevelPalette {
         wood: SIMD3(0.38, 0.26, 0.18),
         night: false
     )
+
+    static let forest = LevelPalette(
+        snow: SIMD3(0.90, 0.95, 0.92),
+        ice: SIMD3(0.45, 0.78, 0.62),
+        skyTop: SIMD3(0.42, 0.62, 0.58),
+        skyBottom: SIMD3(0.78, 0.88, 0.82),
+        fog: SIMD3(0.72, 0.82, 0.76),
+        fogStart: 18,
+        fogEnd: 110,
+        ambient: SIMD3(0.55, 0.68, 0.58),
+        sunColor: SIMD3(0.85, 0.95, 0.80),
+        sunIntensity: 700,
+        wall: SIMD3(0.28, 0.42, 0.30),
+        accent: SIMD3(0.20, 0.72, 0.48),
+        wood: SIMD3(0.40, 0.26, 0.16),
+        night: false
+    )
+
+    static let forestNight = LevelPalette(
+        snow: SIMD3(0.70, 0.78, 0.82),
+        ice: SIMD3(0.40, 0.70, 0.78),
+        skyTop: SIMD3(0.06, 0.10, 0.16),
+        skyBottom: SIMD3(0.10, 0.16, 0.22),
+        fog: SIMD3(0.12, 0.16, 0.20),
+        fogStart: 10,
+        fogEnd: 70,
+        ambient: SIMD3(0.22, 0.30, 0.28),
+        sunColor: SIMD3(0.45, 0.70, 0.80),
+        sunIntensity: 260,
+        wall: SIMD3(0.16, 0.24, 0.20),
+        accent: SIMD3(0.45, 0.90, 0.70),
+        wood: SIMD3(0.28, 0.20, 0.14),
+        night: true
+    )
+
+    static let canyon = LevelPalette(
+        snow: SIMD3(0.82, 0.90, 0.98),
+        ice: SIMD3(0.55, 0.80, 1.0),
+        skyTop: SIMD3(0.18, 0.32, 0.52),
+        skyBottom: SIMD3(0.42, 0.58, 0.78),
+        fog: SIMD3(0.40, 0.55, 0.72),
+        fogStart: 14,
+        fogEnd: 90,
+        ambient: SIMD3(0.40, 0.52, 0.68),
+        sunColor: SIMD3(0.70, 0.88, 1.0),
+        sunIntensity: 620,
+        wall: SIMD3(0.42, 0.62, 0.82),
+        accent: SIMD3(0.45, 0.90, 1.0),
+        wood: SIMD3(0.36, 0.28, 0.22),
+        night: false
+    )
+
+    static let steam = LevelPalette(
+        snow: SIMD3(0.92, 0.94, 0.90),
+        ice: SIMD3(0.70, 0.86, 0.80),
+        skyTop: SIMD3(0.62, 0.70, 0.68),
+        skyBottom: SIMD3(0.88, 0.86, 0.78),
+        fog: SIMD3(0.82, 0.84, 0.78),
+        fogStart: 8,
+        fogEnd: 70,
+        ambient: SIMD3(0.70, 0.68, 0.60),
+        sunColor: SIMD3(1.0, 0.86, 0.62),
+        sunIntensity: 540,
+        wall: SIMD3(0.62, 0.48, 0.36),
+        accent: SIMD3(0.95, 0.55, 0.28),
+        wood: SIMD3(0.48, 0.32, 0.20),
+        night: false
+    )
+
+    static let blizzard = LevelPalette(
+        snow: SIMD3(0.96, 0.98, 1.0),
+        ice: SIMD3(0.78, 0.90, 1.0),
+        skyTop: SIMD3(0.62, 0.70, 0.80),
+        skyBottom: SIMD3(0.88, 0.92, 0.96),
+        fog: SIMD3(0.90, 0.93, 0.97),
+        fogStart: 6,
+        fogEnd: 55,
+        ambient: SIMD3(0.78, 0.84, 0.90),
+        sunColor: SIMD3(0.90, 0.94, 1.0),
+        sunIntensity: 380,
+        wall: SIMD3(0.80, 0.86, 0.92),
+        accent: SIMD3(0.55, 0.78, 1.0),
+        wood: SIMD3(0.40, 0.30, 0.22),
+        night: false
+    )
+
+    static let neon = LevelPalette(
+        snow: SIMD3(0.16, 0.18, 0.28),
+        ice: SIMD3(0.20, 0.90, 1.0),
+        skyTop: SIMD3(0.04, 0.04, 0.12),
+        skyBottom: SIMD3(0.10, 0.06, 0.20),
+        fog: SIMD3(0.08, 0.06, 0.16),
+        fogStart: 12,
+        fogEnd: 80,
+        ambient: SIMD3(0.18, 0.14, 0.28),
+        sunColor: SIMD3(0.80, 0.30, 1.0),
+        sunIntensity: 220,
+        wall: SIMD3(0.18, 0.10, 0.32),
+        accent: SIMD3(1.0, 0.28, 0.72),
+        wood: SIMD3(0.22, 0.16, 0.28),
+        night: true
+    )
+
+    static let carnival = LevelPalette(
+        snow: SIMD3(0.96, 0.92, 0.88),
+        ice: SIMD3(1.0, 0.45, 0.62),
+        skyTop: SIMD3(0.28, 0.10, 0.32),
+        skyBottom: SIMD3(0.55, 0.18, 0.36),
+        fog: SIMD3(0.42, 0.18, 0.32),
+        fogStart: 16,
+        fogEnd: 100,
+        ambient: SIMD3(0.50, 0.28, 0.36),
+        sunColor: SIMD3(1.0, 0.70, 0.35),
+        sunIntensity: 520,
+        wall: SIMD3(0.72, 0.22, 0.38),
+        accent: SIMD3(1.0, 0.82, 0.20),
+        wood: SIMD3(0.50, 0.28, 0.18),
+        night: false
+    )
 }
 
 extension RivalConfig {
@@ -668,5 +1273,17 @@ extension RivalConfig {
 
     static func amber(skill: Float, lateral: Float) -> RivalConfig {
         RivalConfig(name: "Amber", color: SIMD3(0.96, 0.62, 0.18), personality: .aggressive, skill: skill, startLateral: lateral)
+    }
+
+    static func frost(skill: Float, lateral: Float) -> RivalConfig {
+        RivalConfig(name: "Frost", color: SIMD3(0.70, 0.88, 1.0), personality: .aggressive, skill: skill, startLateral: lateral)
+    }
+
+    static func mint(skill: Float, lateral: Float) -> RivalConfig {
+        RivalConfig(name: "Mint", color: SIMD3(0.32, 0.86, 0.62), personality: .cautious, skill: skill, startLateral: lateral)
+    }
+
+    static func coral(skill: Float, lateral: Float) -> RivalConfig {
+        RivalConfig(name: "Coral", color: SIMD3(1.0, 0.42, 0.48), personality: .hoarder, skill: skill, startLateral: lateral)
     }
 }

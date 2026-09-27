@@ -36,13 +36,39 @@ final class GameEngine: ObservableObject {
     private var windPhase: Float = 0
     private var timePenalty: TimeInterval = 0
     private var rewardedTurboUsed = false
+    private(set) var combo = 0
+    private(set) var comboMax = 0
+    private var comboTimer: Float = 0
+    private(set) var nearMisses = 0
+    private(set) var avalancheFront: Float = 0
+    private(set) var avalancheThreat = false
+    private(set) var ghostPose: (progress: Float, lateral: Float, height: Float)?
+    private var recordedGhost: [GhostSample] = []
+    private var playbackGhost: GhostTake?
+    private var ghostClock: Float = 0
+    private var nearMissed: Set<UUID> = []
+    private var usedShortcuts: Set<UUID> = []
+    private(set) var dailyRun = false
 
-    func start(level: LevelDefinition, settings: GameSettings) {
+    func start(level: LevelDefinition, settings: GameSettings, ghost: GhostTake? = nil, daily: Bool = false) {
         self.settings = settings
         self.level = level
         AudioHaptics.shared.apply(settings: settings)
         path = TrackPath.build(from: level)
-        var pack: [Racer] = [RacerFactory.player(startLateral: 0)]
+        dailyRun = daily
+        combo = 0
+        comboMax = 0
+        comboTimer = 0
+        nearMisses = 0
+        avalancheFront = 0
+        avalancheThreat = false
+        ghostPose = nil
+        recordedGhost = []
+        playbackGhost = settings.showGhost ? ghost : nil
+        ghostClock = 0
+        nearMissed = []
+        usedShortcuts = []
+        var pack: [Racer] = [RacerFactory.player(startLateral: 0, skin: settings.selectedSkin)]
         pack.append(contentsOf: level.rivals.map(RacerFactory.rival))
         racers = pack
         entities = level.entities.map {
@@ -75,7 +101,12 @@ final class GameEngine: ObservableObject {
 
     func restart() {
         guard let level else { return }
-        start(level: level, settings: settings)
+        start(level: level, settings: settings, ghost: playbackGhost, daily: dailyRun)
+    }
+
+    func capturedGhost() -> GhostTake? {
+        guard recordedGhost.count > 8 else { return nil }
+        return GhostTake(time: playerRacer?.finishTime ?? raceTime, samples: recordedGhost)
     }
 
     func stop() {
@@ -148,7 +179,11 @@ final class GameEngine: ObservableObject {
             crystals: crystals,
             crystalTotal: level?.crystalCount ?? 0,
             stars: stars,
-            podium: Array(podium)
+            podium: Array(podium),
+            comboMax: comboMax,
+            nearMisses: nearMisses,
+            unlockedSkin: nil,
+            daily: dailyRun
         )
     }
 
@@ -206,6 +241,11 @@ final class GameEngine: ObservableObject {
             collectPickups(index: i, path: path)
             resolvePads(index: i, path: path)
             resolveCheckpoints(index: i)
+            if racers[i].isPlayer {
+                detectNearMiss(index: i, path: path)
+                resolveEvents(index: i, dt: dt, path: path, level: level)
+                recordGhost(index: i, dt: dt)
+            }
             if racers[i].progress >= 0.992 && !racers[i].finished {
                 racers[i].finished = true
                 racers[i].finishTime = raceTime + timePenalty
@@ -223,6 +263,8 @@ final class GameEngine: ObservableObject {
             if allDone { finishHold = max(finishHold, 1.0) }
         }
         landingPulse = max(0, landingPulse - dt * 2.4)
+        tickCombo(dt: dt)
+        playbackGhostPose()
         if toastTimer > 0 {
             toastTimer -= dt
             if toastTimer <= 0 { toastText = "" }
@@ -265,6 +307,13 @@ final class GameEngine: ObservableObject {
         let look = min(1, racer.progress + 0.045)
         var targetLateral: Float = 0
         var avoid: Float = 0
+        for j in racers.indices where j != i {
+            let other = racers[j]
+            if abs(other.progress - racer.progress) < 0.028 {
+                let gap = other.lateral - racer.lateral
+                if abs(gap) < 2.5 { avoid += gap > 0 ? -1.15 : 1.15 }
+            }
+        }
         for entity in entities where !entity.collected && !entity.destroyed {
             let kind = entity.definition.kind
             guard CollisionClass.solidHazards.contains(kind) || kind == .water else { continue }
@@ -306,8 +355,8 @@ final class GameEngine: ObservableObject {
 
     private func applySteering(index i: Int, input: Float, dt: Float, path: TrackPath) {
         let ice = isOnIce(racers[i])
-        var steerPower: Float = racers[i].airborne ? 10 : 28
-        var friction: Float = ice ? 0.22 : 0.78
+        var steerPower: Float = racers[i].airborne ? 14 : 38
+        var friction: Float = ice ? 0.18 : 0.68
         if racers[i].stunned > 0 {
             steerPower *= 0.25
         }
@@ -332,13 +381,20 @@ final class GameEngine: ObservableObject {
         racers[i].ghostTime = max(0, racers[i].ghostTime - dt)
         racers[i].magnetTime = max(0, racers[i].magnetTime - dt)
         racers[i].rocketTime = max(0, racers[i].rocketTime - dt)
+        racers[i].flareTime = max(0, racers[i].flareTime - dt)
         racers[i].bananaCooldown = max(0, racers[i].bananaCooldown - dt)
         racers[i].trailBoost = max(0, racers[i].trailBoost - dt)
-        racers[i].squash = GameMath.damp(racers[i].squash, 1, lambda: 10, dt: dt)
+        racers[i].squash = GameMath.damp(racers[i].squash, 1, lambda: 14, dt: dt)
 
         let sample = path.sample(at: racers[i].progress)
         var maxSpeed: Float = 13.5 + sample.slope * 22
         maxSpeed *= racers[i].skill
+        if !racers[i].isPlayer, let player = playerRacer {
+            let lead = racers[i].progress - player.progress
+            if lead > 0.07 { maxSpeed *= 0.90 }
+            else if lead < -0.12 { maxSpeed *= 1.08 }
+            else if lead < -0.06 { maxSpeed *= 1.05 }
+        }
         if racers[i].rocketTime > 0 { maxSpeed *= 1.55 }
         if racers[i].trailBoost > 0 { maxSpeed *= 1.22 }
         if racers[i].stunned > 0 { maxSpeed *= 0.42 }
@@ -355,11 +411,12 @@ final class GameEngine: ObservableObject {
 
         if racers[i].height > 0.04 || racers[i].verticalVel > 0.1 {
             racers[i].airborne = true
-            racers[i].verticalVel -= 32 * dt
+            racers[i].verticalVel -= 34 * dt
             racers[i].height += racers[i].verticalVel * dt
             if racers[i].height <= 0 {
-                if racers[i].verticalVel < -6 {
-                    racers[i].squash = 0.62
+                racers[i].lateralVel *= 0.50
+                if racers[i].verticalVel < -5 {
+                    racers[i].squash = 0.58
                     landingPulse = 1
                     if racers[i].isPlayer { AudioHaptics.shared.tap(.medium) }
                 }
@@ -427,9 +484,10 @@ final class GameEngine: ObservableObject {
         let t = Float(raceTime)
         for i in entities.indices {
             let kind = entities[i].definition.kind
-            if kind == .cart || kind == .npc {
-                let amp: Float = kind == .cart ? 3.6 : 4.4
-                entities[i].liveLateral = entities[i].definition.lateral + sin(t * 1.7 + entities[i].phase) * amp
+            if kind == .cart || kind == .npc || kind == .movingBridge {
+                let amp: Float = kind == .movingBridge ? 2.8 : (kind == .cart ? 3.6 : 4.4)
+                let rate: Float = kind == .movingBridge ? 1.15 : 1.7
+                entities[i].liveLateral = entities[i].definition.lateral + sin(t * rate + entities[i].phase) * amp
             } else {
                 entities[i].liveLateral = entities[i].definition.lateral
             }
@@ -472,9 +530,9 @@ final class GameEngine: ObservableObject {
             let other = racers[j]
             let ds = (r.progress - other.progress) * path.length
             let dl = r.lateral - other.lateral
-            if ds * ds + dl * dl < 1.6 {
-                racers[i].lateralVel += (dl >= 0 ? 1 : -1) * 2.2
-                racers[i].speed *= 0.96
+            if ds * ds + dl * dl < 2.1 {
+                racers[i].lateralVel += (dl >= 0 ? 1 : -1) * 2.8
+                racers[i].speed *= 0.97
             }
         }
     }
@@ -505,7 +563,10 @@ final class GameEngine: ObservableObject {
         case .crystal:
             racers[i].crystals += 1
             racers[i].turbo = min(1, racers[i].turbo + 0.07)
-            if racers[i].isPlayer { AudioHaptics.shared.collect() }
+            if racers[i].isPlayer {
+                AudioHaptics.shared.collect()
+                bumpCombo("Crystal")
+            }
         case .rocket:
             racers[i].rocketTime = 1.8
             racers[i].speed += 8
@@ -520,6 +581,9 @@ final class GameEngine: ObservableObject {
         case .banana:
             racers[i].bananaArmed = true
             if racers[i].isPlayer { AudioHaptics.shared.power(); toast("Peel ready") }
+        case .flare:
+            racers[i].flareTime = 8
+            if racers[i].isPlayer { AudioHaptics.shared.power(); toast("Flare!") }
         default:
             break
         }
@@ -530,14 +594,15 @@ final class GameEngine: ObservableObject {
         for e in entities where CollisionClass.pads.contains(e.definition.kind) {
             if overlap(racer: racers[i], progress: e.definition.progress, lateral: e.liveLateral, radius: e.definition.radius, path: path) {
                 if e.definition.kind == .ramp {
-                    racers[i].verticalVel = 11.5
-                    racers[i].height = max(racers[i].height, 0.2)
-                    racers[i].speed += 3.5
+                    racers[i].verticalVel = 14.8
+                    racers[i].height = max(racers[i].height, 0.22)
+                    racers[i].speed += 5.5
+                    racers[i].trailBoost = 0.5
                     racers[i].airborne = true
                     if racers[i].isPlayer { AudioHaptics.shared.whoosh() }
                 } else if e.definition.kind == .turboPad {
-                    racers[i].speed += 7
-                    racers[i].trailBoost = 0.8
+                    racers[i].speed += 7.5
+                    racers[i].trailBoost = 0.9
                     if racers[i].isPlayer {
                         AudioHaptics.shared.boost()
                     }
@@ -680,7 +745,12 @@ final class GameEngine: ObservableObject {
             speedKph: Int((player?.speed ?? 0) * 4.2),
             levelName: level?.name ?? "",
             rewardedTurboUsed: rewardedTurboUsed,
-            racing: phase == .racing
+            racing: phase == .racing,
+            combo: combo,
+            nearMisses: nearMisses,
+            flareActive: (player?.flareTime ?? 0) > 0,
+            avalancheThreat: avalancheThreat,
+            avalancheProgress: avalancheFront
         )
         DispatchQueue.main.async { [weak self] in
             self?.hud = snap
@@ -699,6 +769,122 @@ final class GameEngine: ObservableObject {
         cameraLook = GameMath.damp3(cameraLook, desiredLook, lambda: 9, dt: dt)
         let targetFOV: Float = (player.trailBoost > 0 || player.rocketTime > 0) ? 58 : 50
         cameraFOV = GameMath.damp(cameraFOV, targetFOV, lambda: 5, dt: dt)
+    }
+
+    private func bumpCombo(_ reason: String) {
+        combo += 1
+        comboTimer = 1.65
+        comboMax = max(comboMax, combo)
+        if combo >= 2 {
+            if let i = racers.firstIndex(where: \.isPlayer) {
+                racers[i].turbo = min(1, racers[i].turbo + 0.035)
+            }
+            toast("\(reason) x\(combo)")
+            AudioHaptics.shared.comboHit()
+        }
+    }
+
+    private func tickCombo(dt: Float) {
+        guard comboTimer > 0 else { return }
+        comboTimer -= dt
+        if comboTimer <= 0 { combo = 0 }
+    }
+
+    private func detectNearMiss(index i: Int, path: TrackPath) {
+        let r = racers[i]
+        for entity in entities where !entity.destroyed && !entity.collected {
+            guard CollisionClass.solidHazards.contains(entity.definition.kind) else { continue }
+            let ds = (r.progress - entity.definition.progress) * path.length
+            let dl = abs(r.lateral - entity.liveLateral)
+            let inner = entity.definition.radius + 0.65
+            let outer = entity.definition.radius + 2.2
+            if ds > 0.12 && ds < 1.85 && dl > inner && dl < outer {
+                if nearMissed.insert(entity.definition.id).inserted {
+                    nearMisses += 1
+                    bumpCombo("Near miss")
+                }
+            }
+        }
+    }
+
+    private func resolveEvents(index i: Int, dt: Float, path: TrackPath, level: LevelDefinition) {
+        _ = dt
+        avalancheThreat = false
+        for event in level.events where event.kind == .avalanche {
+            let span = max(0.08, event.end - event.start)
+            let travel = min(span, Float(raceTime) * event.magnitude)
+            avalancheFront = event.start + travel
+            if racers[i].progress > event.start - 0.04 && racers[i].progress < event.end {
+                avalancheThreat = true
+                if racers[i].progress + 0.012 < avalancheFront && racers[i].invuln <= 0 {
+                    smash(index: i, factor: 0.62)
+                    racers[i].progress = min(racers[i].progress + 0.01, avalancheFront + 0.004)
+                    toast("Avalanche!")
+                }
+            }
+        }
+        for entity in entities where entity.definition.kind == .shortcut && !entity.collected {
+            if overlap(
+                racer: racers[i],
+                progress: entity.definition.progress,
+                lateral: entity.liveLateral,
+                radius: entity.definition.radius,
+                path: path
+            ), usedShortcuts.insert(entity.definition.id).inserted {
+                let skip = level.events.first {
+                    $0.kind == .shortcut && abs($0.start - entity.definition.progress) < 0.01
+                }?.magnitude ?? 0.028
+                racers[i].progress = min(0.97, racers[i].progress + skip)
+                racers[i].speed += 4
+                toast("Shortcut!")
+                bumpCombo("Cut")
+                AudioHaptics.shared.whoosh()
+            }
+        }
+    }
+
+    private func recordGhost(index i: Int, dt: Float) {
+        ghostClock += dt
+        guard ghostClock >= 0.08 else { return }
+        ghostClock = 0
+        let r = racers[i]
+        recordedGhost.append(GhostSample(t: Float(raceTime), p: r.progress, l: r.lateral, h: r.height))
+        if recordedGhost.count > 280 {
+            recordedGhost.removeFirst(recordedGhost.count - 280)
+        }
+    }
+
+    private func playbackGhostPose() {
+        guard settings.showGhost, let take = playbackGhost, !take.samples.isEmpty else {
+            ghostPose = nil
+            return
+        }
+        let t = Float(raceTime)
+        if t <= take.samples[0].t {
+            let s = take.samples[0]
+            ghostPose = (s.p, s.l, s.h)
+            return
+        }
+        if t >= take.samples[take.samples.count - 1].t {
+            let s = take.samples[take.samples.count - 1]
+            ghostPose = (s.p, s.l, s.h)
+            return
+        }
+        var lo = 0
+        var hi = take.samples.count - 1
+        while hi - lo > 1 {
+            let mid = (lo + hi) / 2
+            if take.samples[mid].t <= t { lo = mid } else { hi = mid }
+        }
+        let a = take.samples[lo]
+        let b = take.samples[hi]
+        let span = max(0.001, b.t - a.t)
+        let u = (t - a.t) / span
+        ghostPose = (
+            GameMath.lerp(a.p, b.p, u),
+            GameMath.lerp(a.l, b.l, u),
+            GameMath.lerp(a.h, b.h, u)
+        )
     }
 
     private func configureMotion() {
