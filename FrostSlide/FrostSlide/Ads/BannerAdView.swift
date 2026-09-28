@@ -20,7 +20,7 @@ private struct BannerAdRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         #if canImport(GoogleMobileAds)
         let host = UIView()
-        let banner = GADBannerView(adSize: GADAdSizeBanner)
+        let banner = BannerView(adSize: AdSizeBanner)
         banner.adUnitID = AdConfig.bannerUnitID
         banner.rootViewController = AdManager.presenter
         banner.translatesAutoresizingMaskIntoConstraints = false
@@ -29,7 +29,7 @@ private struct BannerAdRepresentable: UIViewRepresentable {
             banner.centerXAnchor.constraint(equalTo: host.centerXAnchor),
             banner.centerYAnchor.constraint(equalTo: host.centerYAnchor)
         ])
-        banner.load(GADRequest())
+        banner.load(Request())
         context.coordinator.banner = banner
         return host
         #else
@@ -47,7 +47,7 @@ private struct BannerAdRepresentable: UIViewRepresentable {
 
     final class Coordinator {
         #if canImport(GoogleMobileAds)
-        var banner: GADBannerView?
+        var banner: BannerView?
         #endif
     }
 }

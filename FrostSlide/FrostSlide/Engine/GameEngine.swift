@@ -19,6 +19,7 @@ final class GameEngine: ObservableObject {
     private(set) var cameraLook = SIMD3<Float>(0, 2, 8)
     private(set) var cameraFOV: Float = 50
     private(set) var landingPulse: Float = 0
+    private(set) var cameraShake: Float = 0
     private(set) var toastTimer: Float = 0
     private(set) var toastText = ""
 
@@ -48,6 +49,7 @@ final class GameEngine: ObservableObject {
     private var ghostClock: Float = 0
     private var nearMissed: Set<UUID> = []
     private var usedShortcuts: Set<UUID> = []
+    private var bumpCooldown: Float = 0
     private(set) var dailyRun = false
 
     func start(level: LevelDefinition, settings: GameSettings, ghost: GhostTake? = nil, daily: Bool = false) {
@@ -71,6 +73,8 @@ final class GameEngine: ObservableObject {
         var pack: [Racer] = [RacerFactory.player(startLateral: 0, skin: settings.selectedSkin)]
         pack.append(contentsOf: level.rivals.map(RacerFactory.rival))
         racers = pack
+        spreadStartGrid(path: path!)
+        bumpCooldown = 0
         entities = level.entities.map {
             LiveEntity(definition: $0, collected: false, destroyed: false, liveLateral: $0.lateral, phase: $0.progress * 17)
         }
@@ -87,6 +91,7 @@ final class GameEngine: ObservableObject {
         toastText = ""
         toastTimer = 0
         landingPulse = 0
+        cameraShake = 0
         cameraFOV = 50
         configureMotion()
         worldController.build(level: level, path: path!, racers: racers)
@@ -258,6 +263,9 @@ final class GameEngine: ObservableObject {
                 }
             }
         }
+        bumpCooldown = max(0, bumpCooldown - dt)
+        cameraShake = max(0, cameraShake - dt * 3)
+        separateRacers(path: path)
         if playerRacer?.finished == true {
             let allDone = racers.allSatisfy(\.finished)
             if allDone { finishHold = max(finishHold, 1.0) }
@@ -286,7 +294,58 @@ final class GameEngine: ObservableObject {
             racers[i].speed = GameMath.damp(racers[i].speed, 8, lambda: 2.2, dt: dt)
             racers[i].progress = min(0.997, racers[i].progress + racers[i].speed * dt / path.length)
         }
+        separateRacers(path: path)
         updateCamera(dt: dt)
+    }
+
+    /// Spaces the pack evenly across the start line so no sled spawns inside another.
+    /// Rivals keep their authored left-to-right order; the player takes the middle slot.
+    private func spreadStartGrid(path: TrackPath) {
+        let n = racers.count
+        guard n > 1 else { return }
+        let half = path.width(at: racers[0].progress) * 0.5 - 0.9
+        let spacing = min(2.4, 2 * half / Float(n - 1))
+        let slots = (0..<n).map { (Float($0) - Float(n - 1) / 2) * spacing }
+        let playerSlot = slots.indices.min(by: { abs(slots[$0]) < abs(slots[$1]) }) ?? 0
+        let rivalSlots = slots.indices.filter { $0 != playerSlot }
+        let rivalOrder = racers.indices
+            .filter { !racers[$0].isPlayer }
+            .sorted { racers[$0].lateral < racers[$1].lateral }
+        for (slot, i) in zip(rivalSlots, rivalOrder) {
+            racers[i].lateral = slots[slot]
+        }
+        if let p = racers.firstIndex(where: \.isPlayer) {
+            racers[p].lateral = slots[playerSlot]
+        }
+    }
+
+    /// Soft sled-to-sled contact: overlapping racers are pushed apart sideways so
+    /// nobody drives through anyone. The player feels a light bump.
+    private func separateRacers(path: TrackPath) {
+        let reach: Float = 1.35
+        for a in racers.indices {
+            for b in racers.indices where b > a {
+                if abs(racers[a].height - racers[b].height) > 0.6 { continue }
+                let along = (racers[a].progress - racers[b].progress) * path.length
+                let side = racers[a].lateral - racers[b].lateral
+                guard abs(along) < reach, abs(side) < reach else { continue }
+                let dir: Float = side == 0 ? (a % 2 == 0 ? 1 : -1) : (side > 0 ? 1 : -1)
+                let push = (reach - abs(side)) * 0.5
+                racers[a].lateral += dir * push
+                racers[b].lateral -= dir * push
+                racers[a].lateralVel += dir * 2.5
+                racers[b].lateralVel -= dir * 2.5
+                if (racers[a].isPlayer || racers[b].isPlayer) && bumpCooldown <= 0 {
+                    bumpCooldown = 0.35
+                    cameraShake = max(cameraShake, 0.3)
+                    AudioHaptics.shared.tap(.light)
+                }
+            }
+        }
+        for i in racers.indices {
+            let half = path.width(at: racers[i].progress) * 0.5 - 0.7
+            racers[i].lateral = GameMath.clamp(racers[i].lateral, -half, half)
+        }
     }
 
     private func stepPlayer(index i: Int, dt: Float, path: TrackPath, level: LevelDefinition) {
@@ -646,6 +705,7 @@ final class GameEngine: ObservableObject {
         racers[i].squash = 0.7
         racers[i].lateralVel *= -0.6
         if racers[i].isPlayer {
+            cameraShake = 1
             AudioHaptics.shared.crash()
             toast("Oof!")
         }
@@ -663,6 +723,7 @@ final class GameEngine: ObservableObject {
         racers[i].stunned = 0.4
         if racers[i].isPlayer {
             timePenalty += 3
+            cameraShake = 0.8
             AudioHaptics.shared.crash()
             toast("+3s splash")
         }
@@ -761,14 +822,17 @@ final class GameEngine: ObservableObject {
         guard let path, let player = playerRacer else { return }
         let sample = path.sample(at: player.progress)
         let pos = path.worldPosition(progress: player.progress, lateral: player.lateral, height: player.height)
-        let back: Float = player.rocketTime > 0 ? 7.4 : 6.4
-        let up: Float = 3.15
+        // Faster = lower, closer and wider, so speed reads on screen; boost punches the FOV.
+        let rush = GameMath.saturate((player.speed - 11) / 9)
+        let boosting = player.trailBoost > 0 || player.rocketTime > 0
+        let back: Float = (player.rocketTime > 0 ? 7.4 : 6.4) - rush * 0.7
+        let up: Float = 3.15 - rush * 0.45
         let desiredEye = pos - sample.tangent * back + sample.normal * up
         let desiredLook = pos + sample.tangent * 9.5 + sample.normal * 0.35
         cameraEye = GameMath.damp3(cameraEye, desiredEye, lambda: 7.5, dt: dt)
         cameraLook = GameMath.damp3(cameraLook, desiredLook, lambda: 9, dt: dt)
-        let targetFOV: Float = (player.trailBoost > 0 || player.rocketTime > 0) ? 58 : 50
-        cameraFOV = GameMath.damp(cameraFOV, targetFOV, lambda: 5, dt: dt)
+        let targetFOV: Float = 50 + rush * 6 + (boosting ? 9 : 0)
+        cameraFOV = GameMath.damp(cameraFOV, targetFOV, lambda: boosting ? 7 : 4, dt: dt)
     }
 
     private func bumpCombo(_ reason: String) {

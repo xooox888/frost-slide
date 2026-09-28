@@ -18,8 +18,8 @@ final class AdManager: NSObject, ObservableObject {
     @Published private(set) var lastError: String?
 
     #if canImport(GoogleMobileAds)
-    private var interstitial: GADInterstitialAd?
-    private var rewarded: GADRewardedAd?
+    private var interstitial: InterstitialAd?
+    private var rewarded: RewardedAd?
     #endif
 
     private var started = false
@@ -46,7 +46,7 @@ final class AdManager: NSObject, ObservableObject {
         interstitial = nil
         pendingAfterInterstitial = completion
         ad.fullScreenContentDelegate = self
-        ad.present(fromRootViewController: host)
+        ad.present(from: host)
         #else
         completion()
         #endif
@@ -62,7 +62,7 @@ final class AdManager: NSObject, ObservableObject {
         }
         rewarded = nil
         rewardedReady = false
-        ad.present(fromRootViewController: host) {
+        ad.present(from: host) {
             onReward()
         }
         loadRewarded()
@@ -72,8 +72,27 @@ final class AdManager: NSObject, ObservableObject {
     }
 
     private var pendingAfterInterstitial: (() -> Void)?
+    private var activeObserver: NSObjectProtocol?
 
     private func requestTrackingThenInitialize() {
+        // iOS silently drops the ATT prompt when asked before the app is
+        // active, which is the case when start() runs from the first onAppear.
+        guard UIApplication.shared.applicationState == .active else {
+            guard activeObserver == nil else { return }
+            activeObserver = NotificationCenter.default.addObserver(
+                forName: UIApplication.didBecomeActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    guard let self, let observer = self.activeObserver else { return }
+                    NotificationCenter.default.removeObserver(observer)
+                    self.activeObserver = nil
+                    self.requestTrackingThenInitialize()
+                }
+            }
+            return
+        }
         let boot = { [weak self] in
             self?.initializeSDK()
         }
@@ -90,7 +109,7 @@ final class AdManager: NSObject, ObservableObject {
 
     private func initializeSDK() {
         #if canImport(GoogleMobileAds)
-        GADMobileAds.sharedInstance().start { [weak self] _ in
+        MobileAds.shared.start { [weak self] _ in
             Task { @MainActor in
                 self?.sdkReady = true
                 self?.preload()
@@ -103,8 +122,8 @@ final class AdManager: NSObject, ObservableObject {
 
     private func loadInterstitial() {
         #if canImport(GoogleMobileAds)
-        let request = GADRequest()
-        GADInterstitialAd.load(withAdUnitID: AdConfig.interstitialUnitID, request: request) { [weak self] ad, error in
+        let request = Request()
+        InterstitialAd.load(with: AdConfig.interstitialUnitID, request: request) { [weak self] ad, error in
             Task { @MainActor in
                 if let error {
                     self?.lastError = error.localizedDescription
@@ -119,8 +138,8 @@ final class AdManager: NSObject, ObservableObject {
 
     private func loadRewarded() {
         #if canImport(GoogleMobileAds)
-        let request = GADRequest()
-        GADRewardedAd.load(withAdUnitID: AdConfig.rewardedUnitID, request: request) { [weak self] ad, error in
+        let request = Request()
+        RewardedAd.load(with: AdConfig.rewardedUnitID, request: request) { [weak self] ad, error in
             Task { @MainActor in
                 if let error {
                     self?.lastError = error.localizedDescription
@@ -146,8 +165,8 @@ final class AdManager: NSObject, ObservableObject {
 }
 
 #if canImport(GoogleMobileAds)
-extension AdManager: GADFullScreenContentDelegate {
-    nonisolated func adDidDismissFullScreenContent(_ ad: GADFullScreenPresentingAd) {
+extension AdManager: FullScreenContentDelegate {
+    nonisolated func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
         Task { @MainActor in
             let done = pendingAfterInterstitial
             pendingAfterInterstitial = nil
@@ -156,7 +175,7 @@ extension AdManager: GADFullScreenContentDelegate {
         }
     }
 
-    nonisolated func ad(_ ad: GADFullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+    nonisolated func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
         Task { @MainActor in
             lastError = error.localizedDescription
             let done = pendingAfterInterstitial

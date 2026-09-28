@@ -34,7 +34,9 @@ struct RaceHUDView: View {
         .padding(.horizontal, 16)
         .padding(.top, 10)
         .padding(.bottom, 18)
-        .allowsHitTesting(false)
+        // No .allowsHitTesting(false) here: children cannot re-enable it, so it
+        // killed Pause/Boost/Peel/Refill. Steering drags still reach the parent
+        // gesture through the non-interactive HUD views.
     }
 
     private var topBar: some View {
@@ -48,6 +50,7 @@ struct RaceHUDView: View {
                     .font(FrostTheme.captionFont)
                     .foregroundStyle(.white.opacity(0.8))
             }
+            .hudPlate()
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
                 Text(FrostTheme.formatTime(hud.time))
@@ -63,8 +66,9 @@ struct RaceHUDView: View {
                 }
                 Text("\(hud.speedKph) km/h")
                     .font(.custom("AvenirNext-DemiBold", size: 11))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(0.8))
             }
+            .hudPlate()
             Button(action: onPause) {
                 Image(systemName: "pause.fill")
                     .font(.body.weight(.bold))
@@ -80,7 +84,9 @@ struct RaceHUDView: View {
     private var progressRail: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(.white.opacity(0.28))
+                Capsule()
+                    .fill(FrostTheme.night.opacity(0.4))
+                    .overlay(Capsule().stroke(.white.opacity(0.35), lineWidth: 1))
                 ForEach(Array(hud.checkpoints.enumerated()), id: \.offset) { _, cp in
                     Circle()
                         .fill(.white.opacity(0.7))
@@ -109,7 +115,7 @@ struct RaceHUDView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("TURBO")
                     .font(.custom("AvenirNext-Heavy", size: 11))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundStyle(.white.opacity(0.85))
                 ZStack(alignment: .leading) {
                     Capsule().fill(.white.opacity(0.22)).frame(width: 130, height: 14)
                     Capsule()
@@ -130,6 +136,7 @@ struct RaceHUDView: View {
                     if hud.flareActive { chip("Flare", FrostTheme.ochre) }
                 }
             }
+            .hudPlate()
             Spacer()
             if showRewarded {
                 Button(action: onRewardedTurbo) {
@@ -184,15 +191,30 @@ struct RaceHUDView: View {
         Text(value == 0 ? "GO" : "\(value)")
             .font(.custom("AvenirNext-Heavy", size: 86))
             .foregroundStyle(.white)
-            .shadow(color: FrostTheme.iceDeep.opacity(0.5), radius: 10, y: 4)
+            .shadow(color: FrostTheme.night.opacity(0.55), radius: 10, y: 4)
             .transition(.scale)
     }
 
     private var toast: some View {
         Text(hud.toast)
-            .font(.custom("AvenirNext-Heavy", size: 28))
+            .font(.custom("AvenirNext-Heavy", size: 26))
             .foregroundStyle(.white)
-            .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 8)
+            .background(Capsule().fill(FrostTheme.night.opacity(0.5)))
+            .shadow(color: .black.opacity(0.25), radius: 6, y: 3)
+    }
+}
+
+private extension View {
+    /// Dark translucent backing so white HUD text reads on white snow.
+    func hudPlate() -> some View {
+        padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(FrostTheme.night.opacity(0.42))
+            )
     }
 }
 

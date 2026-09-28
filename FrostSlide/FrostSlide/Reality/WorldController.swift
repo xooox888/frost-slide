@@ -9,6 +9,9 @@ final class WorldController {
     private var worldRoot = Entity()
     private var camera = PerspectiveCamera()
     private var racerEntities: [UUID: Entity] = [:]
+    private var rigs: [UUID: PenguinRig] = [:]
+    private var sky: Entity?
+    private var spray: SnowSpray?
     private var pickupEntities: [UUID: Entity] = [:]
     private var trail: IceTrail?
     private var snow = SnowField()
@@ -53,16 +56,19 @@ final class WorldController {
         view.environment.background = .color(fog)
 
         WorldFactory.build(level: level, path: path, into: worldRoot)
+        sky = worldRoot.findEntity(named: "sky")
 
         pickupEntities = [:]
         collectPickups(from: worldRoot)
 
         racerEntities = [:]
+        rigs = [:]
         for racer in racers {
             let entity = PenguinFactory.make(sledColor: racer.sledColor)
             entity.name = racer.id.uuidString
             worldRoot.addChild(entity)
             racerEntities[racer.id] = entity
+            rigs[racer.id] = PenguinRig(entity)
         }
 
         camera = PerspectiveCamera()
@@ -79,6 +85,7 @@ final class WorldController {
         lastLanding = false
         trail?.clear()
         trail = IceTrail(parent: worldRoot)
+        spray = UIAccessibility.isReduceMotionEnabled ? nil : SnowSpray(parent: worldRoot)
         snow = SnowField()
         if !UIAccessibility.isReduceMotionEnabled {
             snow.attach(to: worldRoot, night: level.palette.night)
@@ -106,12 +113,17 @@ final class WorldController {
             let qRoll = simd_quatf(angle: racer.roll, axis: [0, 0, 1])
             entity.orientation = qYaw * qPitch * qRoll
             entity.scale = [1, racer.squash, 1]
-            if let shroud = entity.findEntity(named: "ghostShroud") {
-                shroud.isEnabled = racer.ghostTime > 0
-            }
-            if let glow = entity.findEntity(named: "sledGlow") as? PointLight {
-                glow.light.intensity = 280 + racer.trailBoost * 700 + racer.rocketTime * 400
-            }
+            guard let rig = rigs[racer.id] else { continue }
+            rig.shroud?.isEnabled = racer.ghostTime > 0
+            rig.glow?.light.intensity = 280 + racer.trailBoost * 700 + racer.rocketTime * 400
+            // Flap hard on boost and in the air; idle sway otherwise. Scarf flutters with speed.
+            let seed = Float(abs(racer.id.hashValue % 97))
+            let flapping = racer.trailBoost > 0 || racer.airborne || racer.rocketTime > 0
+            let flap = flapping ? sin(spinTime * 22 + seed) * 0.55 : sin(spinTime * 3 + seed) * 0.06
+            rig.flipL?.orientation = simd_quatf(angle: -0.85 - flap, axis: [0, 0, 1])
+            rig.flipR?.orientation = simd_quatf(angle: 0.85 + flap, axis: [0, 0, 1])
+            let flutter = sin(spinTime * 15 + seed) * min(1, racer.speed / 16) * 0.4
+            rig.tail?.orientation = simd_quatf(angle: flutter, axis: [0, 1, 0]) * simd_quatf(angle: 0.25, axis: [1, 0, 0])
         }
 
         for live in engine.entities {
@@ -152,9 +164,22 @@ final class WorldController {
             let pos = path.worldPosition(progress: player.progress, lateral: player.lateral, height: 0)
             trailTick += dt
             if trailTick > 0.035 && !player.airborne {
+                let length = max(0.7, player.speed * trailTick * 1.15)
                 trailTick = 0
-                trail?.push(position: pos, intense: player.trailBoost > 0 || player.rocketTime > 0 || engine.combo >= 3)
+                trail?.push(
+                    position: pos,
+                    yaw: player.yaw,
+                    length: length,
+                    intense: player.trailBoost > 0 || player.rocketTime > 0 || engine.combo >= 3
+                )
             }
+            let sample = path.sample(at: player.progress)
+            var sprayRate: Float = 0
+            if !player.airborne && engine.phase == .racing {
+                sprayRate = max(0, player.speed - 12) * 1.5 + abs(player.lateralVel) * 5
+                if player.trailBoost > 0 || player.rocketTime > 0 { sprayRate += 26 }
+            }
+            spray?.tick(dt: dt, at: pos, forward: sample.tangent, side: sample.binormal, rate: sprayRate)
             snow.tick(dt: dt, around: engine.cameraEye)
             if engine.landingPulse > 0.7 && !lastLanding {
                 snow.burst(at: pos)
@@ -172,8 +197,14 @@ final class WorldController {
             view.environment.lighting.intensityExponent = night ? (flare ? 0.35 : -0.15) : 0.15
         }
 
-        camera.look(at: engine.cameraLook, from: engine.cameraEye, relativeTo: nil)
+        let shake = engine.cameraShake * 0.16 + engine.landingPulse * 0.06
+        let jitter = shake > 0.001
+            ? SIMD3<Float>(Float.random(in: -1...1), Float.random(in: -1...1), 0) * shake
+            : .zero
+        camera.look(at: engine.cameraLook + jitter * 0.5, from: engine.cameraEye + jitter, relativeTo: nil)
         camera.camera.fieldOfViewInDegrees = engine.cameraFOV
+        // Keep the sky dome centred on the camera so the horizon stays at eye level.
+        sky?.position = engine.cameraEye
     }
 
     private func syncGhost(engine: GameEngine, path: TrackPath) {
@@ -230,5 +261,22 @@ final class WorldController {
         for child in root.children {
             collectPickups(from: child)
         }
+    }
+}
+
+/// Cached handles into a penguin entity so per-frame animation skips tree searches.
+private struct PenguinRig {
+    let flipL: Entity?
+    let flipR: Entity?
+    let tail: Entity?
+    let shroud: Entity?
+    let glow: PointLight?
+
+    init(_ entity: Entity) {
+        flipL = entity.findEntity(named: "flipL")
+        flipR = entity.findEntity(named: "flipR")
+        tail = entity.findEntity(named: "scarfTail")
+        shroud = entity.findEntity(named: "ghostShroud")
+        glow = entity.findEntity(named: "sledGlow") as? PointLight
     }
 }

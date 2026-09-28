@@ -20,6 +20,10 @@ struct GamePlaySurface: View {
             RealityKitRaceView(engine: engine)
                 .ignoresSafeArea()
 
+            SpeedLinesOverlay(speedKph: engine.hud.speedKph, time: engine.hud.time)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
             RaceHUDView(
                 hud: engine.hud,
                 paused: engine.paused,
@@ -47,7 +51,7 @@ struct GamePlaySurface: View {
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
-                    engine.steerInput = Float(value.translation.width / 72)
+                    engine.steerInput = Float(value.translation.width / 60)
                 }
                 .onEnded { _ in
                     engine.steerInput = 0
@@ -56,6 +60,41 @@ struct GamePlaySurface: View {
         .onDisappear {
             engine.boostHeld = false
             engine.steerInput = 0
+        }
+    }
+}
+
+/// Edge streaks that fade in above cruising speed so boosts feel fast.
+struct SpeedLinesOverlay: View {
+    let speedKph: Int
+    let time: TimeInterval
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let intensity = min(1, max(0, (Double(speedKph) - 64) / 26))
+        Canvas { context, size in
+            guard intensity > 0, !reduceMotion else { return }
+            let center = CGPoint(x: size.width / 2, y: size.height * 0.46)
+            let reach = max(size.width, size.height) * 0.75
+            let count = 36
+            for i in 0..<count {
+                let seed = Double(i) * 12.9898
+                let jitter = seed - seed.rounded(.down)
+                let angle = Double(i) / Double(count) * 2 * .pi + sin(seed) * 0.12
+                let speed = 2.2 + jitter * 1.6
+                let phase = (time * speed + jitter * 3.1).truncatingRemainder(dividingBy: 1)
+                let inner = reach * (0.42 + phase * 0.5)
+                let length = reach * (0.08 + intensity * 0.16)
+                let dir = CGPoint(x: cos(angle), y: sin(angle))
+                var line = Path()
+                line.move(to: CGPoint(x: center.x + dir.x * inner, y: center.y + dir.y * inner))
+                line.addLine(to: CGPoint(x: center.x + dir.x * (inner + length), y: center.y + dir.y * (inner + length)))
+                context.stroke(
+                    line,
+                    with: .color(Color(red: 0.62, green: 0.86, blue: 1.0).opacity(0.5 * intensity * (1 - phase * 0.5))),
+                    lineWidth: 1.5 + jitter * 2
+                )
+            }
         }
     }
 }

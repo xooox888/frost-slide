@@ -6,10 +6,14 @@ struct MainMenuView: View {
 
     var body: some View {
         ZStack {
-            Image("MenuHero")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+            // Overlay on a screen-sized clear view so the fill-scaled hero
+            // cannot widen the ZStack and push the buttons off-screen.
+            Color.clear
+                .overlay(
+                    Image("MenuHero")
+                        .resizable()
+                        .scaledToFill()
+                )
                 .overlay(
                     LinearGradient(
                         colors: [
@@ -21,6 +25,8 @@ struct MainMenuView: View {
                         endPoint: .bottom
                     )
                 )
+                .clipped()
+                .ignoresSafeArea()
 
             SnowfallOverlay(density: 36)
 

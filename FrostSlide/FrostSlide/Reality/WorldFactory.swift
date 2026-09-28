@@ -34,17 +34,27 @@ enum WorldFactory {
     }
 
     static func addSky(level: LevelDefinition, root: Entity) {
-        let sky = ModelEntity(
-            mesh: .generateSphere(radius: 380),
-            materials: [RKMat.unlit(level.palette.skyBottom)]
-        )
+        let material: RealityKit.Material
+        if let texture = RKTexture.sky(level.palette) {
+            material = RKMat.unlit(texture: texture)
+        } else {
+            material = RKMat.unlit(level.palette.skyBottom)
+        }
+        let sky = ModelEntity(mesh: .generateSphere(radius: 360), materials: [material])
+        sky.name = "sky"
         sky.scale = [-1, 1, 1]
         root.addChild(sky)
     }
 
     static func addGround(path: TrackPath, level: LevelDefinition, root: Entity) {
         let mesh = RKMesh.ribbon(path: path)
-        let ground = RKEntity.model(mesh, RKMat.pbr(level.palette.snow, roughness: 0.84, doubleSided: true))
+        var mat = RKMat.pbr(level.palette.snow, roughness: 0.78, doubleSided: true)
+        // Base colour only: an emissive texture here lit the whole ribbon white
+        // and washed out the grooves and rails, which already read in the albedo.
+        if let color = RKTexture.track(level.palette) {
+            mat.baseColor = .init(tint: .white, texture: .init(color, sampler: RKTexture.repeating))
+        }
+        let ground = RKEntity.model(mesh, mat)
         ground.name = "trackSurface"
         root.addChild(ground)
 
@@ -61,16 +71,23 @@ enum WorldFactory {
     }
 
     static func addBanks(path: TrackPath, level: LevelDefinition, root: Entity) {
-        let step = max(1, path.samples.count / 64)
+        // Soft drifts with a cool shadow tint so the white track keeps a readable edge.
+        let step = max(1, path.samples.count / 110)
         let mesh = MeshResource.generateSphere(radius: 1)
-        let mat = RKMat.pbr(level.palette.snow, roughness: 0.9)
+        let drift = RKMat.pbr(simd_mix(level.palette.snow, level.palette.ice, SIMD3(repeating: 0.18)), roughness: 0.92)
+        let deep = RKMat.pbr(simd_mix(level.palette.snow, level.palette.ice, SIMD3(repeating: 0.38)), roughness: 0.92)
+        var flip = false
         for i in stride(from: 0, to: path.samples.count, by: step) {
             let s = path.samples[i]
+            flip.toggle()
             for sign: Float in [-1, 1] {
-                let mound = ModelEntity(mesh: mesh, materials: [mat])
-                let pos = s.position + s.binormal * sign * (s.width * 0.5 + 1.3) + s.normal * 0.15
+                let mound = ModelEntity(mesh: mesh, materials: [flip ? drift : deep])
+                // Sit outside the track edge so the glowing rails stay visible.
+                let pos = s.position + s.binormal * sign * (s.width * 0.5 + 2.9) + s.normal * 0.1
                 mound.position = pos
-                mound.scale = [1.6, 0.45, 1.3]
+                let wobble = Float((i * 7919) % 13) / 13
+                mound.scale = [2.2 + wobble * 0.8, 0.75 + wobble * 0.45, 2.4]
+                mound.orientation = simd_quatf(angle: s.heading, axis: [0, 1, 0])
                 root.addChild(mound)
             }
         }
@@ -130,41 +147,116 @@ enum WorldFactory {
 
     static func building(palette: LevelPalette, scale: Float) -> Entity {
         let root = Entity()
-        let w: Float = 3.4 + scale * 0.6
-        let h: Float = 6.5 + scale * 2.4
-        let d: Float = 3.2
-        let jitter = Float.random(in: -0.06...0.08)
-        let wall = simd_clamp(palette.wall + SIMD3(jitter, jitter * 0.5, -jitter * 0.3), SIMD3(repeating: 0), SIMD3(repeating: 1))
-        let body = RKEntity.box([w, h, d], wall, roughness: 0.7)
+        let w: Float = 3.6 + scale * 0.6
+        let h: Float = 4.6 + scale * 1.8
+        let d: Float = 3.6
+        let walls: [SIMD3<Float>] = [
+            SIMD3(0.36, 0.62, 0.74), SIMD3(0.93, 0.88, 0.78), SIMD3(0.52, 0.66, 0.86),
+            SIMD3(0.80, 0.47, 0.38), SIMD3(0.44, 0.70, 0.66)
+        ]
+        let roofs: [SIMD3<Float>] = [SIMD3(0.16, 0.26, 0.46), SIMD3(0.12, 0.44, 0.52), SIMD3(0.58, 0.20, 0.22)]
+        let wall = simd_mix(palette.wall, walls.randomElement()!, SIMD3(repeating: 0.6))
+        let body = RKEntity.box([w, h, d], wall, roughness: 0.75)
         body.position.y = h / 2
         root.addChild(body)
-        let roof = RKEntity.box([w + 0.3, 0.35, d + 0.3], SIMD3(0.97, 0.97, 0.98), roughness: 0.85)
-        roof.position.y = h + 0.1
+
+        let trim = RKEntity.box([w + 0.12, 0.22, d + 0.12], SIMD3(0.96, 0.96, 0.98), roughness: 0.6)
+        trim.position.y = h - 0.1
+        root.addChild(trim)
+
+        let roofH: Float = 1.8 + scale * 0.3
+        let roof = RKEntity.model(
+            RKMesh.gableRoof(width: w + 0.8, height: roofH, depth: d + 0.7),
+            RKMat.pbr(roofs.randomElement()!, roughness: 0.55)
+        )
+        roof.position.y = h
         root.addChild(roof)
-        for col: Float in [-1, 1] {
-            for row: Float in [0.35, 0.62] {
-                let win = RKEntity.box([0.45, 0.62, 0.06], SIMD3(0.35, 0.5, 0.62), roughness: 0.2)
-                win.position = [col * w * 0.22, h * row, d * 0.51]
-                root.addChild(win)
+        // Snow cap: same slope as the roof, shorter, so coloured eaves show below it.
+        let cap = RKEntity.model(
+            RKMesh.gableRoof(width: (w + 0.8) * 0.72, height: roofH * 0.72, depth: d + 0.9),
+            RKMat.pbr(SIMD3(0.97, 0.98, 1.0), roughness: 0.9)
+        )
+        cap.position.y = h + roofH * 0.28 + 0.08
+        root.addChild(cap)
+
+        let chimney = RKEntity.box([0.55, 1.4, 0.55], SIMD3(0.55, 0.30, 0.24), roughness: 0.8)
+        chimney.position = [w * 0.24, h + roofH * 0.7, -d * 0.2]
+        root.addChild(chimney)
+        let chimneySnow = RKEntity.box([0.68, 0.16, 0.68], SIMD3(0.97, 0.98, 1.0), roughness: 0.9)
+        chimneySnow.position = [w * 0.24, h + roofH * 0.7 + 0.76, -d * 0.2]
+        root.addChild(chimneySnow)
+
+        // Warm lit windows on every face so they read from the chase camera.
+        let lit = RKMat.glow(SIMD3(1.0, 0.76, 0.40), intensity: palette.night ? 2.2 : 1.1)
+        let frame = RKMat.pbr(SIMD3(0.97, 0.97, 0.98), roughness: 0.6)
+        let pane = MeshResource.generateBox(size: [0.5, 0.66, 0.06])
+        let border = MeshResource.generateBox(size: [0.66, 0.82, 0.04])
+        let rows: [Float] = h > 6 ? [0.3, 0.62] : [0.45]
+        for row in rows {
+            for col: Float in [-1, 1] {
+                for (pos, yaw) in [
+                    (SIMD3<Float>(col * w * 0.24, h * row, d * 0.51), Float(0)),
+                    (SIMD3<Float>(col * w * 0.24, h * row, -d * 0.51), Float.pi),
+                    (SIMD3<Float>(w * 0.51, h * row, col * d * 0.24), Float.pi / 2),
+                    (SIMD3<Float>(-w * 0.51, h * row, col * d * 0.24), -Float.pi / 2)
+                ] {
+                    let b = ModelEntity(mesh: border, materials: [frame])
+                    b.position = pos
+                    b.orientation = simd_quatf(angle: yaw, axis: [0, 1, 0])
+                    root.addChild(b)
+                    let win = ModelEntity(mesh: pane, materials: [lit])
+                    win.position = pos + simd_quatf(angle: yaw, axis: [0, 1, 0]).act([0, 0, 0.02])
+                    win.orientation = b.orientation
+                    root.addChild(win)
+                }
             }
         }
+        let door = RKEntity.box([0.9, 1.5, 0.08], SIMD3(0.36, 0.22, 0.14), roughness: 0.7)
+        door.position = [0, 0.75, -d * 0.52]
+        root.addChild(door)
+        let drift = RKEntity.sphere(1, SIMD3(0.95, 0.97, 1.0), roughness: 0.92)
+        drift.scale = [w * 0.62, 0.35, d * 0.62]
+        root.addChild(drift)
         return root
     }
 
     static func archway() -> Entity {
+        // Ice-crystal arch from the menu art: glassy pillars, a curved crystal span, glowing core.
         let root = Entity()
-        let stone = SIMD3<Float>(0.93, 0.94, 0.95)
+        let ice = RKMat.pbr(SIMD3(0.62, 0.88, 1.0), roughness: 0.08, metallic: 0.1, emissive: SIMD3(0.10, 0.36, 0.60), alpha: 0.86)
+        let core = RKMat.glow(SIMD3(0.30, 0.85, 1.0), intensity: 1.4)
+        let spike = RKMesh.cone(bottomRadius: 0.42, height: 1.5, segments: 6)
+        let radius: Float = 4.1
+        let lift: Float = 5.6
         for sign: Float in [-1, 1] {
-            let p = RKEntity.box([1.15, 7.2, 1.4], stone, roughness: 0.7)
-            p.position = [sign * 4.1, 3.6, 0]
-            root.addChild(p)
+            let pillar = RKEntity.model(.generateBox(size: [1.0, lift, 1.1], cornerRadius: 0.12), ice)
+            pillar.position = [sign * radius, lift / 2, 0]
+            root.addChild(pillar)
+            let seam = RKEntity.model(.generateBox(size: [0.18, lift * 0.92, 1.14]), core)
+            seam.position = [sign * radius, lift / 2, 0]
+            root.addChild(seam)
+            for k in 0..<3 {
+                let c = RKEntity.model(spike, ice)
+                let fk = Float(k)
+                c.position = [sign * (radius + 0.5 + fk * 0.25), 0.7 + fk * 0.2, (fk - 1) * 0.45]
+                c.orientation = simd_quatf(angle: -sign * (0.35 + fk * 0.15), axis: [0, 0, 1])
+                c.scale = SIMD3(repeating: 0.8 + fk * 0.2)
+                root.addChild(c)
+            }
         }
-        let beam = RKEntity.box([9.6, 1.5, 1.6], stone, roughness: 0.68)
-        beam.position.y = 7.4
-        root.addChild(beam)
-        let facade = RKEntity.box([11, 3.8, 1.8], SIMD3(0.22, 0.62, 0.78), roughness: 0.55)
-        facade.position.y = 9.8
-        root.addChild(facade)
+        let segments = 9
+        for i in 0..<segments {
+            let a = Float.pi * (Float(i) + 0.5) / Float(segments)
+            let block = RKEntity.model(.generateBox(size: [1.55, 0.95, 1.1], cornerRadius: 0.1), ice)
+            block.position = [cos(a) * radius, lift + sin(a) * (radius * 0.72), 0]
+            block.orientation = simd_quatf(angle: a - Float.pi / 2, axis: [0, 0, 1])
+            root.addChild(block)
+            let tip = RKEntity.model(spike, i % 2 == 0 ? ice : core)
+            tip.position = [cos(a) * (radius + 0.9), lift + sin(a) * (radius * 0.72 + 0.9), 0]
+            tip.orientation = simd_quatf(angle: a - Float.pi / 2, axis: [0, 0, 1])
+            tip.scale = SIMD3(repeating: i % 2 == 0 ? 1.0 : 0.7)
+            root.addChild(tip)
+        }
         return root
     }
 
@@ -199,18 +291,24 @@ enum WorldFactory {
     }
 
     static func crystal() -> Entity {
-        let node = RKEntity.box(
-            [0.32, 0.55, 0.32],
-            SIMD3(0.45, 0.9, 1.0),
-            roughness: 0.12
-        )
+        let node = Entity()
+        let gem = RKMat.glow(SIMD3(0.35, 0.88, 1.0), intensity: 1.3, alpha: 0.95)
+        let top = RKEntity.model(RKMesh.cone(bottomRadius: 0.24, height: 0.42, segments: 6), gem)
+        top.position.y = 0.21
+        let bottom = RKEntity.model(RKMesh.cone(bottomRadius: 0.24, height: 0.3, segments: 6), gem)
+        bottom.position.y = -0.15
+        bottom.orientation = simd_quatf(angle: Float.pi, axis: [1, 0, 0])
+        node.addChild(top)
+        node.addChild(bottom)
         node.position.y = 0.7
         node.name = "crystalSpin"
         return node
     }
 
     static func powerOrb(_ color: SIMD3<Float>, _ symbol: String) -> Entity {
-        let node = RKEntity.sphere(0.38, color, roughness: 0.15)
+        let node = RKEntity.model(.generateSphere(radius: 0.38), RKMat.glow(color, intensity: 1.2))
+        let halo = RKEntity.model(.generateSphere(radius: 0.55), RKMat.pbr(color, roughness: 0.1, emissive: color * 0.5, alpha: 0.25))
+        node.addChild(halo)
         node.position.y = 0.85
         node.name = "power-\(symbol)"
         return node
@@ -219,15 +317,31 @@ enum WorldFactory {
     static func snowman() -> Entity {
         let root = Entity()
         let white = SIMD3<Float>(0.96, 0.97, 0.98)
+        let coal = SIMD3<Float>(0.08, 0.08, 0.10)
         let n1 = RKEntity.sphere(0.55, white, roughness: 0.85); n1.position.y = 0.5
         let n2 = RKEntity.sphere(0.40, white, roughness: 0.85); n2.position.y = 1.2
         let n3 = RKEntity.sphere(0.28, white, roughness: 0.85); n3.position.y = 1.75
-        let hat = RKEntity.model(RKMesh.cylinder(radius: 0.22, height: 0.22), RKMat.pbr(SIMD3(0.15, 0.18, 0.28), roughness: 0.6))
-        hat.position.y = 2.05
-        let nose = RKEntity.model(RKMesh.cone(bottomRadius: 0.05, height: 0.18), RKMat.pbr(SIMD3(1, 0.5, 0.1), roughness: 0.4))
+        let hat = RKEntity.model(RKMesh.cylinder(radius: 0.22, height: 0.26), RKMat.pbr(SIMD3(0.15, 0.18, 0.28), roughness: 0.6))
+        hat.position.y = 2.07
+        let brim = RKEntity.model(RKMesh.cylinder(radius: 0.32, height: 0.04), RKMat.pbr(SIMD3(0.15, 0.18, 0.28), roughness: 0.6))
+        brim.position.y = 1.95
+        let nose = RKEntity.model(RKMesh.cone(bottomRadius: 0.05, height: 0.2), RKMat.pbr(SIMD3(1, 0.5, 0.1), roughness: 0.4))
         nose.orientation = simd_quatf(angle: Float.pi / 2, axis: [1, 0, 0])
-        nose.position = [0, 1.72, 0.28]
-        [n1, n2, n3, hat, nose].forEach { root.addChild($0) }
+        nose.position = [0, 1.72, 0.3]
+        let scarf = RKEntity.model(RKMesh.cylinder(radius: 0.33, height: 0.12), RKMat.pbr(SIMD3(0.92, 0.26, 0.34), roughness: 0.6))
+        scarf.position.y = 1.5
+        let tail = RKEntity.box([0.14, 0.42, 0.05], SIMD3(0.92, 0.26, 0.34), roughness: 0.6)
+        tail.position = [0.16, 1.32, 0.3]
+        [n1, n2, n3, hat, brim, nose, scarf, tail].forEach { root.addChild($0) }
+        for sign: Float in [-1, 1] {
+            let eye = RKEntity.sphere(0.04, coal, roughness: 0.3)
+            eye.position = [sign * 0.1, 1.82, 0.25]
+            root.addChild(eye)
+            let arm = RKEntity.model(RKMesh.cylinder(radius: 0.025, height: 0.8), RKMat.pbr(SIMD3(0.36, 0.22, 0.12), roughness: 0.8))
+            arm.position = [sign * 0.62, 1.32, 0]
+            arm.orientation = simd_quatf(angle: sign * 1.0, axis: [0, 0, 1])
+            root.addChild(arm)
+        }
         return root
     }
 
@@ -271,26 +385,37 @@ enum WorldFactory {
         table.position.y = 0.85
         let cloth = RKEntity.box([2.25, 0.72, 0.06], SIMD3(0.82, 0.22, 0.25), roughness: 0.6)
         cloth.position = [0, 0.5, 0.55]
-        let canopy = RKEntity.box([2.4, 0.08, 1.4], SIMD3(0.15, 0.72, 0.85), roughness: 0.45)
-        canopy.position.y = 1.85
-        [table, cloth, canopy].forEach { root.addChild($0) }
+        [table, cloth].forEach { root.addChild($0) }
+        for i in 0..<6 {
+            let stripe = RKEntity.box([0.4, 0.1, 1.45], i % 2 == 0 ? SIMD3(0.96, 0.96, 0.98) : SIMD3(0.15, 0.62, 0.85), roughness: 0.5)
+            stripe.position = [-1.0 + Float(i) * 0.4, 1.85, 0]
+            root.addChild(stripe)
+        }
+        for sign: Float in [-1, 1] {
+            let post = RKEntity.box([0.08, 1.8, 0.08], SIMD3(0.45, 0.30, 0.16), roughness: 0.7)
+            post.position = [sign * 1.05, 0.9, -0.6]
+            root.addChild(post)
+        }
         return root
     }
 
     static func pine(scale: Float) -> Entity {
         let root = Entity()
-        let trunk = RKEntity.model(RKMesh.cylinder(radius: 0.16, height: 1.1), RKMat.pbr(SIMD3(0.38, 0.24, 0.14), roughness: 0.8))
+        let trunk = RKEntity.model(RKMesh.cylinder(radius: 0.18, height: 1.1), RKMat.pbr(SIMD3(0.38, 0.24, 0.14), roughness: 0.8))
         trunk.position.y = 0.55
         root.addChild(trunk)
-        var y: Float = 1.1
-        for i in 0..<3 {
-            let cone = RKEntity.model(
-                RKMesh.cone(bottomRadius: 1.3 - Float(i) * 0.28, height: 1.35),
-                RKMat.pbr(SIMD3(0.16, 0.38, 0.26), roughness: 0.75)
-            )
+        let needles = RKMat.pbr(SIMD3(0.10, 0.34, 0.27), roughness: 0.8)
+        let snow = RKMat.pbr(SIMD3(0.95, 0.97, 1.0), roughness: 0.9)
+        var y: Float = 1.25
+        for i in 0..<4 {
+            let r = 1.45 - Float(i) * 0.3
+            let cone = RKEntity.model(RKMesh.cone(bottomRadius: r, height: 1.3, segments: 12), needles)
             cone.position.y = y
             root.addChild(cone)
-            y += 0.7
+            let cap = RKEntity.model(RKMesh.cone(bottomRadius: r * 0.62, height: 0.8, segments: 12), snow)
+            cap.position.y = y + 0.28
+            root.addChild(cap)
+            y += 0.72
         }
         root.scale = SIMD3(repeating: scale)
         return root
@@ -339,8 +464,8 @@ enum WorldFactory {
         let root = Entity()
         let pole = RKEntity.model(RKMesh.cylinder(radius: 0.07, height: 2.6), RKMat.pbr(SIMD3(0.2, 0.2, 0.22), roughness: 0.5))
         pole.position.y = 1.3
-        let bulb = RKEntity.sphere(0.18, SIMD3(1, 0.85, 0.45), roughness: 0.15)
-        bulb.position.y = 2.55
+        let bulb = RKEntity.model(.generateSphere(radius: 0.2), RKMat.glow(SIMD3(1, 0.82, 0.45), intensity: night ? 2.4 : 1.2))
+        bulb.position.y = 2.6
         if night {
             let light = PointLight()
             light.light.color = UIColor(red: 1, green: 0.82, blue: 0.5, alpha: 1)
@@ -486,9 +611,28 @@ enum WorldFactory {
 
     static func finishGate(width: Float) -> Entity {
         let root = checkpointGate(width: width)
-        let banner = RKEntity.box([width * 0.9, 0.55, 0.12], SIMD3(1.0, 0.32, 0.42), roughness: 0.4)
-        banner.position.y = 2.6
-        root.addChild(banner)
+        let span = width * 0.86
+        let cols = 14
+        let cell = span / Float(cols)
+        let black = RKMat.pbr(SIMD3(0.08, 0.09, 0.12), roughness: 0.5)
+        let white = RKMat.pbr(SIMD3(0.97, 0.97, 0.98), roughness: 0.5)
+        let box = MeshResource.generateBox(size: [cell, cell, 0.1])
+        let top = 2.45 + cell * 2
+        for sign: Float in [-1, 1] {
+            let post = RKEntity.model(
+                RKMesh.cylinder(radius: 0.12, height: top + 0.2),
+                RKMat.glow(SIMD3(1.0, 0.32, 0.45), intensity: 0.9)
+            )
+            post.position = [sign * (span / 2 + 0.12), (top + 0.2) / 2, 0]
+            root.addChild(post)
+        }
+        for row in 0..<2 {
+            for col in 0..<cols {
+                let tile = ModelEntity(mesh: box, materials: [(row + col) % 2 == 0 ? black : white])
+                tile.position = [-span / 2 + cell * (Float(col) + 0.5), 2.45 + Float(row) * cell, 0]
+                root.addChild(tile)
+            }
+        }
         return root
     }
 }
