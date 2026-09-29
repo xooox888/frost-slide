@@ -46,6 +46,7 @@
 		A10000000000000000000052 /* whoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000051 /* whoosh.wav */; };
 		A10000000000000000000054 /* power.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000053 /* power.wav */; };
 		A10000000000000000000069 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000068 /* StoreManager.swift */; };
+		A1000000000000000000006E /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000006D /* ConfettiSwiftUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -98,6 +99,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000060 /* GoogleMobileAds in Frameworks */,
+				A1000000000000000000006E /* ConfettiSwiftUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,6 +259,7 @@
 			name = FrostSlide;
 			packageProductDependencies = (
 				A1000000000000000000005F /* GoogleMobileAds */,
+				A1000000000000000000006D /* ConfettiSwiftUI */,
 			);
 			productName = FrostSlide;
 			productReference = A10000000000000000000016 /* FrostSlide.app */;
@@ -288,6 +291,7 @@
 			mainGroup = A10000000000000000000006;
 			packageReferences = (
 				A1000000000000000000005E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				A1000000000000000000006C /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
 			);
 			productRefGroup = A10000000000000000000007 /* Products */;
 			projectDirPath = "";
@@ -486,6 +490,14 @@
 				minimumVersion = 12.0.0;
 			};
 		};
+		A1000000000000000000006C /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/simibac/ConfettiSwiftUI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -493,6 +505,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1000000000000000000005E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
+		};
+		A1000000000000000000006D /* ConfettiSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000006C /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
+			productName = ConfettiSwiftUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
