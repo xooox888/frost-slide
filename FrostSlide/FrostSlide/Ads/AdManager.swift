@@ -37,6 +37,10 @@ final class AdManager: NSObject, ObservableObject {
 
     /// Full-screen ad after the player leaves the results screen.
     func showInterstitialThen(_ completion: @escaping () -> Void) {
+        if StoreManager.shared.adsRemoved {
+            completion()
+            return
+        }
         #if canImport(GoogleMobileAds)
         guard let ad = interstitial, let host = Self.presenter else {
             completion()
@@ -121,6 +125,7 @@ final class AdManager: NSObject, ObservableObject {
     }
 
     private func loadInterstitial() {
+        guard !StoreManager.shared.adsRemoved else { return }
         #if canImport(GoogleMobileAds)
         let request = Request()
         InterstitialAd.load(with: AdConfig.interstitialUnitID, request: request) { [weak self] ad, error in

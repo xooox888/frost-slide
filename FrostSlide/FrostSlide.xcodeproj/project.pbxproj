@@ -45,6 +45,7 @@
 		A10000000000000000000050 /* go.wav in Resources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000004F /* go.wav */; };
 		A10000000000000000000052 /* whoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000051 /* whoosh.wav */; };
 		A10000000000000000000054 /* power.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000053 /* power.wav */; };
+		A10000000000000000000069 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000068 /* StoreManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +88,8 @@
 		A10000000000000000000051 /* whoosh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = whoosh.wav; sourceTree = "<group>"; };
 		A10000000000000000000053 /* power.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = power.wav; sourceTree = "<group>"; };
 		A10000000000000000000016 /* FrostSlide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FrostSlide.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000068 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
+		A1000000000000000000006A /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -127,6 +130,7 @@
 				A1000000000000000000000C /* Reality */,
 				A1000000000000000000000D /* UI */,
 				A10000000000000000000061 /* Ads */,
+				A1000000000000000000006B /* Store */,
 				A1000000000000000000000E /* Resources */,
 				A10000000000000000000041 /* Assets.xcassets */,
 				A10000000000000000000043 /* Info.plist */,
@@ -224,6 +228,15 @@
 				A10000000000000000000053 /* power.wav */,
 			);
 			path = Sounds;
+			sourceTree = "<group>";
+		};
+		A1000000000000000000006B /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000068 /* StoreManager.swift */,
+				A1000000000000000000006A /* Products.storekit */,
+			);
+			path = Store;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -337,6 +350,7 @@
 				A10000000000000000000056 /* AdConfig.swift in Sources */,
 				A10000000000000000000058 /* AdManager.swift in Sources */,
 				A1000000000000000000005A /* BannerAdView.swift in Sources */,
+				A10000000000000000000069 /* StoreManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

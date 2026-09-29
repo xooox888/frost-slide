@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var app: AppModel
+    @EnvironmentObject private var store: StoreManager
     @State private var confirmReset = false
 
     var body: some View {
@@ -80,6 +81,8 @@ struct SettingsView: View {
                         }
                     }
 
+                    removeAdsCard
+
                     Link(destination: AdConfig.privacyPolicyURL) {
                         HStack {
                             Image(systemName: "hand.raised.fill")
@@ -126,6 +129,61 @@ struct SettingsView: View {
         .onChange(of: app.persistence.settings) { _, new in
             AudioHaptics.shared.apply(settings: new)
             app.persistence.persist()
+        }
+    }
+
+    private var removeAdsCard: some View {
+        FrostCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    Image(systemName: store.adsRemoved ? "checkmark.seal.fill" : "nosign")
+                        .font(.title3)
+                        .foregroundStyle(FrostTheme.ice)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(store.adsRemoved ? "Ads removed" : "Remove ads")
+                            .font(.custom("AvenirNext-Bold", size: 17))
+                            .foregroundStyle(FrostTheme.ink)
+                        Text(store.adsRemoved
+                            ? "Thank you for supporting Frost Slide."
+                            : "One-time purchase. No more banners or full-screen ads. The optional refill videos stay.")
+                            .font(FrostTheme.captionFont)
+                            .foregroundStyle(FrostTheme.inkSoft)
+                    }
+                    Spacer()
+                }
+                if !store.adsRemoved {
+                    FrostButton(
+                        title: store.price.map { "Remove ads · \($0)" } ?? "Remove ads",
+                        icon: "cart",
+                        color: FrostTheme.ochre,
+                        foreground: FrostTheme.ink
+                    ) {
+                        Task { await store.purchase() }
+                    }
+                    .disabled(store.busy != .none)
+                }
+                Button {
+                    Task { await store.restore() }
+                } label: {
+                    Text("Restore purchases")
+                        .font(.custom("AvenirNext-DemiBold", size: 14))
+                        .foregroundStyle(FrostTheme.iceDeep)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                }
+                .disabled(store.busy != .none)
+                if store.busy != .none {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                }
+                if let message = store.message {
+                    Text(message)
+                        .font(FrostTheme.captionFont)
+                        .foregroundStyle(FrostTheme.inkSoft)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .multilineTextAlignment(.center)
+                        .accessibilityAddTraits(.updatesFrequently)
+                }
+            }
         }
     }
 
