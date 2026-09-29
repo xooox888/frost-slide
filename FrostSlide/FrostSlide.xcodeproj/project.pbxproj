@@ -47,6 +47,9 @@
 		A10000000000000000000054 /* power.wav in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000053 /* power.wav */; };
 		A10000000000000000000069 /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000068 /* StoreManager.swift */; };
 		A1000000000000000000006E /* ConfettiSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000006D /* ConfettiSwiftUI */; };
+		A10000000000000000000073 /* Analytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000072 /* Analytics.swift */; };
+		A10000000000000000000075 /* AnalyticsConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000074 /* AnalyticsConfig.swift */; };
+		A10000000000000000000071 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000070 /* TelemetryDeck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -91,6 +94,8 @@
 		A10000000000000000000016 /* FrostSlide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FrostSlide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000068 /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		A1000000000000000000006A /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
+		A10000000000000000000072 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
+		A10000000000000000000074 /* AnalyticsConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +105,7 @@
 			files = (
 				A10000000000000000000060 /* GoogleMobileAds in Frameworks */,
 				A1000000000000000000006E /* ConfettiSwiftUI in Frameworks */,
+				A10000000000000000000071 /* TelemetryDeck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +138,7 @@
 				A1000000000000000000000C /* Reality */,
 				A1000000000000000000000D /* UI */,
 				A10000000000000000000061 /* Ads */,
+				A10000000000000000000076 /* Analytics */,
 				A1000000000000000000006B /* Store */,
 				A1000000000000000000000E /* Resources */,
 				A10000000000000000000041 /* Assets.xcassets */,
@@ -241,6 +248,15 @@
 			path = Store;
 			sourceTree = "<group>";
 		};
+		A10000000000000000000076 /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000072 /* Analytics.swift */,
+				A10000000000000000000074 /* AnalyticsConfig.swift */,
+			);
+			path = Analytics;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -260,6 +276,7 @@
 			packageProductDependencies = (
 				A1000000000000000000005F /* GoogleMobileAds */,
 				A1000000000000000000006D /* ConfettiSwiftUI */,
+				A10000000000000000000070 /* TelemetryDeck */,
 			);
 			productName = FrostSlide;
 			productReference = A10000000000000000000016 /* FrostSlide.app */;
@@ -292,6 +309,7 @@
 			packageReferences = (
 				A1000000000000000000005E /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 				A1000000000000000000006C /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */,
+				A1000000000000000000006F /* XCRemoteSwiftPackageReference "SwiftSDK" */,
 			);
 			productRefGroup = A10000000000000000000007 /* Products */;
 			projectDirPath = "";
@@ -355,6 +373,8 @@
 				A10000000000000000000058 /* AdManager.swift in Sources */,
 				A1000000000000000000005A /* BannerAdView.swift in Sources */,
 				A10000000000000000000069 /* StoreManager.swift in Sources */,
+				A10000000000000000000073 /* Analytics.swift in Sources */,
+				A10000000000000000000075 /* AnalyticsConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -498,6 +518,14 @@
 				minimumVersion = 3.0.0;
 			};
 		};
+		A1000000000000000000006F /* XCRemoteSwiftPackageReference "SwiftSDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/TelemetryDeck/SwiftSDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.14.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -510,6 +538,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1000000000000000000006C /* XCRemoteSwiftPackageReference "ConfettiSwiftUI" */;
 			productName = ConfettiSwiftUI;
+		};
+		A10000000000000000000070 /* TelemetryDeck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000006F /* XCRemoteSwiftPackageReference "SwiftSDK" */;
+			productName = TelemetryDeck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

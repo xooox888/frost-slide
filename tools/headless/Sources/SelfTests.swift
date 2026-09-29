@@ -297,6 +297,10 @@ func testSettingsCoding() {
     let wild = #"{"steerSensitivity":9}"#
     let w = try! JSONDecoder().decode(GameSettings.self, from: Data(wild.utf8))
     check(w.steerSensitivity == GameSettings.steerSensitivityRange.upperBound, "sensitivity clamped to \(w.steerSensitivity)")
+    check(s.shareUsageData, "usage stats default to on for saves that predate the setting")
+    let optedOut = try! JSONDecoder().decode(GameSettings.self, from: Data(#"{"shareUsageData":false}"#.utf8))
+    let reloaded = try! JSONDecoder().decode(GameSettings.self, from: try! JSONEncoder().encode(optedOut))
+    check(!optedOut.shareUsageData && !reloaded.shareUsageData, "opting out of usage stats survives a save")
     let oldRecord = #"{"bestPlace":2,"bestStars":3,"bestTime":33.5,"bestCrystals":20,"timesPlayed":4}"#
     let r = try! JSONDecoder().decode(LevelRecord.self, from: Data(oldRecord.utf8))
     check(r.bestStars == 3 && !r.perfect && r.ghost == nil, "old level record decodes")

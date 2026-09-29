@@ -223,6 +223,8 @@ struct GameSettings: Codable, Equatable {
     var selectedSkin: SledSkin
     /// Multiplies swipe distance before it becomes steering (1 = a 60 pt drag is full lock).
     var steerSensitivity: Float
+    /// Anonymous usage stats (see `Analytics`). On by default; the player can turn it off.
+    var shareUsageData: Bool
 
     static let steerSensitivityRange: ClosedRange<Float> = 0.6...1.6
 
@@ -236,7 +238,7 @@ struct GameSettings: Codable, Equatable {
     )
 
     enum CodingKeys: String, CodingKey {
-        case tiltSteering, unlockAll, hapticsEnabled, soundEnabled, showGhost, selectedSkin, steerSensitivity
+        case tiltSteering, unlockAll, hapticsEnabled, soundEnabled, showGhost, selectedSkin, steerSensitivity, shareUsageData
     }
 
     init(
@@ -246,7 +248,8 @@ struct GameSettings: Codable, Equatable {
         soundEnabled: Bool,
         showGhost: Bool,
         selectedSkin: SledSkin,
-        steerSensitivity: Float = 1
+        steerSensitivity: Float = 1,
+        shareUsageData: Bool = true
     ) {
         self.tiltSteering = tiltSteering
         self.unlockAll = unlockAll
@@ -255,6 +258,7 @@ struct GameSettings: Codable, Equatable {
         self.showGhost = showGhost
         self.selectedSkin = selectedSkin
         self.steerSensitivity = steerSensitivity
+        self.shareUsageData = shareUsageData
     }
 
     init(from decoder: Decoder) throws {
@@ -267,6 +271,7 @@ struct GameSettings: Codable, Equatable {
         selectedSkin = try c.decodeIfPresent(SledSkin.self, forKey: .selectedSkin) ?? .cyan
         let sens = try c.decodeIfPresent(Float.self, forKey: .steerSensitivity) ?? 1
         steerSensitivity = min(max(sens, Self.steerSensitivityRange.lowerBound), Self.steerSensitivityRange.upperBound)
+        shareUsageData = try c.decodeIfPresent(Bool.self, forKey: .shareUsageData) ?? true
     }
 }
 

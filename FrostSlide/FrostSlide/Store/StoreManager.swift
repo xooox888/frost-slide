@@ -69,7 +69,12 @@ final class StoreManager: ObservableObject {
         do {
             switch try await product.purchase() {
             case .success(let result):
-                message = await handle(result) ? "Thank you! Ads are removed." : "The purchase couldn't be verified."
+                if await handle(result) {
+                    message = "Thank you! Ads are removed."
+                    Analytics.track(.adsRemoved)
+                } else {
+                    message = "The purchase couldn't be verified."
+                }
             case .pending:
                 message = "Waiting for approval. Ads go away once the purchase is approved."
             case .userCancelled:
