@@ -1,0 +1,9 @@
+dist
+ios
+android
+node_modules
+test-results
+playwright-report
+tests/fixtures
+public
+*.md

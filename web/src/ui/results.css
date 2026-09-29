@@ -1,0 +1,367 @@
+/* The finish screen (`ResultsView.swift`). */
+
+.results {
+  --focus: var(--ice-deep);
+  background: #fff;
+  color: var(--ink);
+}
+
+.results-backdrop {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(var(--snow), #fff, rgb(var(--ice-rgb) / 0.22));
+}
+
+/* The actions stick to the bottom (`.safeAreaInset(edge: .bottom)`) with the content scrolling under them. */
+.results-scroll {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.results-content {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: calc(var(--safe-top) + 24px) calc(var(--safe-right) + 22px) 16px calc(var(--safe-left) + 22px);
+}
+
+.results-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* MARK: - Summary */
+
+.results-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.results-headline {
+  font-size: 30px;
+  font-weight: var(--heavy);
+}
+
+.results-headline.is-best {
+  color: var(--berry);
+}
+
+.results-place {
+  color: var(--ice-deep);
+  font-size: 64px;
+  font-weight: var(--heavy);
+}
+
+.results-place.is-winner {
+  color: var(--ochre);
+}
+
+.results-stars {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Each star pops as it lands: `.spring(response: 0.35, dampingFraction: 0.55)`. */
+.results-star {
+  color: rgb(var(--ink-rgb) / 0.18);
+  transition:
+    transform 0.45s cubic-bezier(0.34, 1.7, 0.5, 1),
+    color 0.3s ease-out;
+}
+
+.results-star.is-shown {
+  color: var(--ochre);
+}
+
+.results-star.is-latest {
+  transform: scale(1.18);
+}
+
+.results-seal {
+  margin-left: 4px;
+  color: var(--berry);
+}
+
+.results-perfect {
+  color: var(--berry);
+  font-size: 12px;
+  font-weight: var(--heavy);
+}
+
+.results-delta {
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: var(--bold);
+}
+
+/* MARK: - Breakdown */
+
+.results-breakdown {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 10px;
+}
+
+.results-breakdown-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--ink-soft);
+}
+
+.results-breakdown-title {
+  font-size: 12px;
+  font-weight: var(--heavy);
+}
+
+.results-breakdown-points {
+  font-size: 11px;
+  font-weight: var(--demibold);
+  white-space: pre;
+}
+
+.results-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.results-row-icon {
+  color: rgb(var(--ink-rgb) / 0.25);
+}
+
+.results-row.is-earned .results-row-icon {
+  color: var(--pine);
+}
+
+.results-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.results-row-title {
+  font-size: 15px;
+  font-weight: var(--bold);
+}
+
+.results-row-detail {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: var(--medium);
+}
+
+.results-row-points {
+  color: rgb(var(--ink-rgb) / 0.3);
+  font-size: 15px;
+  font-weight: var(--heavy);
+}
+
+.results-row.is-earned .results-row-points {
+  color: var(--pine);
+}
+
+/* MARK: - Daily and skins */
+
+.results-daily {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  gap: 12px;
+}
+
+.results-daily-icon {
+  color: var(--berry);
+}
+
+.results-daily.is-met .results-daily-icon {
+  color: var(--pine);
+}
+
+.results-daily-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.results-daily-title {
+  font-size: 15px;
+  font-weight: var(--heavy);
+}
+
+.results-daily-line {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: var(--demibold);
+}
+
+.results-skin {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.85);
+  color: var(--ice-deep);
+  font-size: 16px;
+  font-weight: var(--bold);
+  text-align: center;
+}
+
+.results-next-skin {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: var(--demibold);
+  text-align: center;
+}
+
+/* MARK: - Standings */
+
+.results-standings {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 10px;
+}
+
+.results-podium {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0 20px;
+  list-style: none;
+}
+
+.results-podium-entry {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Second, winner, third: the winner stands in the middle. */
+.results-podium-entry.place-1 {
+  order: 2;
+}
+
+.results-podium-entry.place-2 {
+  order: 1;
+}
+
+.results-podium-entry.place-3 {
+  order: 3;
+}
+
+.results-podium-sled {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.results-podium-name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: var(--bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.results-podium-block {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  max-width: 100%;
+  height: 52px;
+  border-radius: 10px;
+  background: rgb(var(--ice-rgb) / 0.35);
+  font-size: 22px;
+  font-weight: var(--heavy);
+}
+
+.place-1 .results-podium-block {
+  height: 86px;
+  background: var(--ochre);
+}
+
+.place-2 .results-podium-block {
+  height: 68px;
+}
+
+.results-podium-time {
+  min-height: 1.4em;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: var(--demibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.results-you {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 20px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: var(--bold);
+}
+
+.results-you-gap {
+  font-variant-numeric: tabular-nums;
+}
+
+/* MARK: - Actions */
+
+.results-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  padding: 12px calc(var(--safe-right) + 22px) calc(var(--safe-bottom) + 8px) calc(var(--safe-left) + 22px);
+  /* `.ultraThinMaterial` */
+  background: rgb(255 255 255 / 0.35);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  backdrop-filter: blur(24px) saturate(1.8);
+}
+
+.results-actions-row {
+  display: flex;
+  gap: 10px;
+}
+
+.results-actions-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.results-menu {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 16px;
+  color: var(--ink-soft);
+  font-size: 16px;
+  font-weight: var(--medium);
+}
+
+.results-menu:active {
+  opacity: 0.6;
+}

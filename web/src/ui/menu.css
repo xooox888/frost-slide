@@ -1,0 +1,99 @@
+/* The title screen (`MainMenuView.swift`). */
+
+.menu {
+  background: var(--night);
+  color: #fff;
+}
+
+.menu-hero {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgb(var(--night-rgb) / 0.15),
+    rgb(var(--ice-deep-rgb) / 0.28),
+    rgb(var(--night-rgb) / 0.72)
+  );
+}
+
+/* Bottom-aligned column above the banner. On a short screen the badge gives way first. */
+.menu-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--safe-top) var(--safe-right) calc(var(--safe-bottom) + var(--banner-h, 0px) + 22px) var(--safe-left);
+}
+
+.menu-content > * {
+  flex-shrink: 0;
+}
+
+.menu-badge {
+  flex: 0 1 auto;
+  height: 104px;
+  min-height: 0;
+  margin-bottom: 10px;
+}
+
+.menu-badge--still {
+  height: 88px;
+}
+
+.menu-badge img {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 1;
+  box-shadow: 0 6px 32px rgb(var(--ice-rgb) / 0.45);
+}
+
+.menu-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 50px;
+  font-weight: var(--heavy);
+}
+
+.menu-title-frost {
+  color: #fff;
+  text-shadow: 0 3px 16px rgb(var(--ice-deep-rgb) / 0.55);
+}
+
+.menu-title-slide {
+  color: var(--ice);
+  text-shadow: 0 3px 16px rgb(var(--ice-rgb) / 0.45);
+}
+
+.menu-tagline {
+  margin: 8px 0 24px;
+  color: rgb(255 255 255 / 0.86);
+  font-size: 15px;
+  font-weight: var(--demibold);
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0 28px;
+}
+
+.menu-hint {
+  margin-top: 16px;
+  color: rgb(255 255 255 / 0.72);
+  font-size: 13px;
+  font-weight: var(--demibold);
+  white-space: pre;
+}

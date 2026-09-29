@@ -12,6 +12,8 @@
 #   tools/headless/run.sh standings <course 1-24> <bot>   one race with times and crash counts
 #   tools/headless/run.sh calibrate [n]     re-tune rival strength in LevelCatalog.swift
 #   tools/headless/run.sh goals             re-derive par times and crystal goals from real races
+#   tools/headless/run.sh catalog           every course as JSON, scenery made deterministic
+#   tools/headless/run.sh trace             a scripted race per course, sampled twice a second
 #
 # Needs swiftc 5.9+ on PATH (tested with Swift 6.0.3 for Linux) and python3 for sweep/calibrate.
 set -euo pipefail
@@ -42,11 +44,24 @@ build() {
 # a copy of the sources with the band switched off (by editing Tuning in the copy only).
 build_without_band() {
   local copy="$OUT/no-band-src"
+  mkdir -p "$OUT"
   rm -rf "$copy"
   cp -R "$APP" "$copy"
   sed -i.bak -e 's/static let bandSlow: Float = [0-9.]*/static let bandSlow: Float = 0/' \
              -e 's/static let bandCatchUp: Float = [0-9.]*/static let bandCatchUp: Float = 0/' "$copy/Engine/GameEngine.swift"
   APP_DIR="$copy" HEADLESS_OUT="$OUT/no-band" "$0" build
+}
+
+# The Swift catalog scatters some scenery (building offsets, pine sizes) with the system random
+# generator. For the JSON dump that the TypeScript port is checked against, a copy of the sources
+# is built with every `Float.random(in: a...b)` replaced by `a`.
+build_deterministic() {
+  local copy="$OUT/deterministic-src"
+  mkdir -p "$OUT"
+  rm -rf "$copy"
+  cp -R "$APP" "$copy"
+  sed -i.bak -E 's/Float\.random\(in: (-?[0-9.]+)\.\.\.(-?[0-9.]+)\)/Float(\1)/g' "$copy/Core/LevelCatalog.swift"
+  APP_DIR="$copy" HEADLESS_OUT="$OUT/deterministic" "$0" build
 }
 
 # Runs `headless <args> <first> <last>` for four slices of the 24 courses in parallel.
@@ -77,5 +92,7 @@ case "$cmd" in
   standings) build; "$BIN" standings "$(( $1 - 1 ))" "$2" ;;
   calibrate) python3 "$HERE/calibrate.py" "${1:-5}" ;;
   goals) python3 "$HERE/goals.py" ;;
+  catalog) build_deterministic >&2; "$OUT/deterministic/headless" catalog ;;
+  trace) build; "$BIN" trace "$@" ;;
   help|*) sed -n '2,18p' "$0" ;;
 esac

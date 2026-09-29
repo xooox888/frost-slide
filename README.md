@@ -6,6 +6,13 @@ Built with **Swift + SwiftUI** for menus, HUD, results, and settings, and **Real
 
 Original Frost Slide art and UI only — not Sled Surfers (or any other game) assets or branding.
 
+> **Rebuilt on three.js.** [`web/`](web/README.md) is the whole game rebuilt as a web app
+> (TypeScript, three.js, Preact) in a native iOS shell (Capacitor), proven against this Swift
+> engine course by course. It ships as version 2.0.0 under the same bundle id and keeps players'
+> saves. See [`web/README.md`](web/README.md) and the plan in [`web/PLAN.md`](web/PLAN.md). The
+> rest of this page describes the Swift app, which stays until the web build has been played on
+> real iPhones.
+
 ## Open and run
 
 1. Install Xcode 15 or newer (iOS 17 SDK). Xcode 16+ recommended so Swift Package Manager can resolve Google Mobile Ads.

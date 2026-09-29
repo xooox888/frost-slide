@@ -1,0 +1,53 @@
+name: iOS build
+
+# Compiles the Capacitor iOS app without signing, to catch native build breaks (plugin updates,
+# Swift Package resolution, Xcode changes). Runs when the native project or the plugin versions
+# change, and by hand from the Actions tab. (macOS runners are free for public repositories;
+# on a private one, consider keeping only the manual trigger.) Shipping still happens from a Mac
+# with a signing team: see web/README.md.
+on:
+  push:
+    paths:
+      - 'web/ios/**'
+      - 'web/package-lock.json'
+      - 'web/capacitor.config.ts'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Unsigned simulator build
+    runs-on: macos-15
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Use the newest stable Xcode on the runner
+        run: |
+          xcode=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync ios
+      - name: Build
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build
