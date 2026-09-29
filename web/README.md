@@ -116,6 +116,7 @@ every tick; nothing in the engine knows how it is drawn. Every balance number li
 This rebuild was written in a Linux container without a Mac or an iPhone. The game, renderer
 and UI are type-checked, unit-tested and played end to end in Chromium (with software WebGL).
 The native side (the Xcode project, AdMob, StoreKit, haptics, Preferences, the save migration)
-follows the plugins' published APIs but has not been compiled or run: the first `npm run ios`
-on a Mac is its first real test. Frame rate on phones has not been measured, and the painted art
-(icon, menu hero, thumbnails, launch badge) still shows the old penguin mascot.
+follows the plugins' published APIs and compiles in CI (unsigned, Xcode 26.3), but it has not
+run: the first `npm run ios` on a Mac with an iPhone is its first real test. Frame rate on phones
+has not been measured, and the painted art (icon, menu hero, thumbnails, launch badge) still
+shows the old penguin mascot.

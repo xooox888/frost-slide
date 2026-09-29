@@ -92,6 +92,7 @@ Rules that keep it maintainable:
 
 ### Phase 7: iOS app
 - [~] Capacitor iOS project (SPM), bundle id `com.frostslide.FrostSlide`, portrait, full screen
+  (compiles in CI with Xcode 26.3; not yet run on a device)
 - [~] Info.plist (AdMob app id, tracking text, SKAdNetwork ids, motion text), privacy manifest
 - [~] App icon and launch screen
 
@@ -99,7 +100,8 @@ Rules that keep it maintainable:
 - [x] Playwright plays a real race in Chromium and takes screenshots of every screen on a small
   and a large iPhone viewport
 - [x] GitHub Actions: lint, type-check, unit tests, build and end-to-end tests on every push
-- [~] GitHub Actions: manual iOS build job on a macOS runner (unsigned compile check)
+- [x] GitHub Actions: iOS build job on a macOS runner (unsigned compile check), on native
+  changes and by hand
 - [x] README for the web app
 
 ### Phase 9: ship (needs a Mac and an Apple Developer account)
@@ -163,9 +165,10 @@ This repository was rebuilt in a Linux container without Xcode or an iPhone. Eve
 `core/`, `engine/`, `render/` and `ui/` is built, type-checked, unit-tested and exercised in a
 real browser (Chromium with software WebGL) by the end-to-end tests. The native side (the
 Capacitor iOS project, AdMob, StoreKit, haptics, preferences, the save migration, the App Store
-build) is written against the plugins' published APIs but has not been compiled or run; the
-first `npm run ios` on a Mac (or the manual iOS workflow) is its first real test. Frame rate on
-phones has not been measured, and the painted art still shows the old penguin mascot.
+build) is written against the plugins' published APIs. It compiles (the iOS workflow builds it
+unsigned for the simulator with Xcode 26.3), but it has not run: the first `npm run ios` on a Mac
+with an iPhone is its first real test. Frame rate on phones has not been measured, and the
+painted art still shows the old penguin mascot.
 
 Status marks above: `[x]` done and verified here, `[~]` written but only verifiable on a Mac or
 an iPhone, `[ ]` not done.
