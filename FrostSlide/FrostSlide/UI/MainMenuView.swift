@@ -4,6 +4,15 @@ struct MainMenuView: View {
     @EnvironmentObject private var app: AppModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private var dailySubtitle: String {
+        if app.persistence.dailyDoneToday {
+            let streak = app.persistence.activeDailyStreak
+            return streak > 1 ? "Done today · \(streak)-day streak" : "Done today · come back tomorrow"
+        }
+        let pick = app.dailyPick
+        return "\(CourseInfo.of(pick.level).name) · \(pick.goal.title)"
+    }
+
     var body: some View {
         ZStack {
             // Overlay on a screen-sized clear view so the fill-scaled hero
@@ -55,10 +64,21 @@ struct MainMenuView: View {
                 .padding(.bottom, 24)
 
                 VStack(spacing: 12) {
-                    FrostButton(title: "Race", icon: "flag.checkered", color: FrostTheme.berry) {
-                        app.screen = .levelSelect
+                    FrostButton(
+                        title: "Race",
+                        subtitle: "Course \(app.nextCourse.order + 1) · \(CourseInfo.of(app.nextCourse).name)",
+                        icon: "flag.checkered",
+                        color: FrostTheme.berry
+                    ) {
+                        app.quickRace()
                     }
-                    FrostButton(title: "Daily Challenge", icon: "calendar", color: FrostTheme.ochre, foreground: FrostTheme.ink) {
+                    FrostButton(
+                        title: "Daily Challenge",
+                        subtitle: dailySubtitle,
+                        icon: "calendar",
+                        color: FrostTheme.ochre,
+                        foreground: FrostTheme.ink
+                    ) {
                         app.playDaily()
                     }
                     FrostButton(title: "Course Map", icon: "map.fill", color: FrostTheme.ice) {

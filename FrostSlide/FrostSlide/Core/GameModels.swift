@@ -221,6 +221,10 @@ struct GameSettings: Codable, Equatable {
     var soundEnabled: Bool
     var showGhost: Bool
     var selectedSkin: SledSkin
+    /// Multiplies swipe distance before it becomes steering (1 = a 60 pt drag is full lock).
+    var steerSensitivity: Float
+
+    static let steerSensitivityRange: ClosedRange<Float> = 0.6...1.6
 
     static let `default` = GameSettings(
         tiltSteering: false,
@@ -232,7 +236,7 @@ struct GameSettings: Codable, Equatable {
     )
 
     enum CodingKeys: String, CodingKey {
-        case tiltSteering, unlockAll, hapticsEnabled, soundEnabled, showGhost, selectedSkin
+        case tiltSteering, unlockAll, hapticsEnabled, soundEnabled, showGhost, selectedSkin, steerSensitivity
     }
 
     init(
@@ -241,7 +245,8 @@ struct GameSettings: Codable, Equatable {
         hapticsEnabled: Bool,
         soundEnabled: Bool,
         showGhost: Bool,
-        selectedSkin: SledSkin
+        selectedSkin: SledSkin,
+        steerSensitivity: Float = 1
     ) {
         self.tiltSteering = tiltSteering
         self.unlockAll = unlockAll
@@ -249,6 +254,7 @@ struct GameSettings: Codable, Equatable {
         self.soundEnabled = soundEnabled
         self.showGhost = showGhost
         self.selectedSkin = selectedSkin
+        self.steerSensitivity = steerSensitivity
     }
 
     init(from decoder: Decoder) throws {
@@ -259,6 +265,8 @@ struct GameSettings: Codable, Equatable {
         soundEnabled = try c.decodeIfPresent(Bool.self, forKey: .soundEnabled) ?? true
         showGhost = try c.decodeIfPresent(Bool.self, forKey: .showGhost) ?? true
         selectedSkin = try c.decodeIfPresent(SledSkin.self, forKey: .selectedSkin) ?? .cyan
+        let sens = try c.decodeIfPresent(Float.self, forKey: .steerSensitivity) ?? 1
+        steerSensitivity = min(max(sens, Self.steerSensitivityRange.lowerBound), Self.steerSensitivityRange.upperBound)
     }
 }
 
@@ -269,6 +277,8 @@ struct LevelRecord: Codable, Equatable {
     var bestCrystals: Int
     var timesPlayed: Int
     var ghost: GhostTake?
+    /// Every objective met in a single run: won, hit the crystal goal and beat par.
+    var perfect: Bool
 
     static let empty = LevelRecord(
         bestPlace: 99,
@@ -280,7 +290,7 @@ struct LevelRecord: Codable, Equatable {
     )
 
     enum CodingKeys: String, CodingKey {
-        case bestPlace, bestStars, bestTime, bestCrystals, timesPlayed, ghost
+        case bestPlace, bestStars, bestTime, bestCrystals, timesPlayed, ghost, perfect
     }
 
     init(
@@ -289,7 +299,8 @@ struct LevelRecord: Codable, Equatable {
         bestTime: TimeInterval,
         bestCrystals: Int,
         timesPlayed: Int,
-        ghost: GhostTake?
+        ghost: GhostTake?,
+        perfect: Bool = false
     ) {
         self.bestPlace = bestPlace
         self.bestStars = bestStars
@@ -297,6 +308,7 @@ struct LevelRecord: Codable, Equatable {
         self.bestCrystals = bestCrystals
         self.timesPlayed = timesPlayed
         self.ghost = ghost
+        self.perfect = perfect
     }
 
     init(from decoder: Decoder) throws {
@@ -307,7 +319,31 @@ struct LevelRecord: Codable, Equatable {
         bestCrystals = try c.decodeIfPresent(Int.self, forKey: .bestCrystals) ?? 0
         timesPlayed = try c.decodeIfPresent(Int.self, forKey: .timesPlayed) ?? 0
         ghost = try c.decodeIfPresent(GhostTake.self, forKey: .ghost)
+        perfect = try c.decodeIfPresent(Bool.self, forKey: .perfect) ?? false
     }
+}
+
+/// How stars are earned, in one place so the engine, the results screen and the
+/// pre-race briefing can never disagree.
+///
+/// Finishing is worth 1 star. Bonus points add up: 1st place is 2, 2nd is 1, and the
+/// crystal goal and par time are 1 each. Two bonus points make 3 stars; a fourth is a
+/// "perfect" run. A win is enough on its own, but a runner-up (or a player who can't
+/// catch the pack on a hard course) can still reach 3 stars with the crystal and par goals.
+enum StarRules {
+    static func points(place: Int, crystals: Int, crystalGoal: Int, time: TimeInterval, parTime: TimeInterval) -> Int {
+        var points = 0
+        if place == 1 { points += 2 } else if place == 2 { points += 1 }
+        if crystals >= crystalGoal { points += 1 }
+        if time <= parTime { points += 1 }
+        return points
+    }
+
+    static func stars(points: Int) -> Int {
+        1 + min(2, max(0, points))
+    }
+
+    static let perfectPoints = 4
 }
 
 struct RaceResult: Identifiable, Equatable {
@@ -324,6 +360,27 @@ struct RaceResult: Identifiable, Equatable {
     var nearMisses: Int
     var unlockedSkin: SledSkin?
     var daily: Bool
+
+    // Goals the stars were judged against, so the results screen can show the breakdown.
+    var parTime: TimeInterval = 0
+    var crystalGoal: Int = 0
+    var crashes: Int = 0
+    /// Every racer, in finishing order.
+    var standings: [PodiumEntry] = []
+
+    // Filled in by AppModel once the save has been written.
+    var previousBest: TimeInterval?
+    var newBest = false
+    var dailyGoal: DailyChallenge.Goal?
+    var dailyMet = false
+    var dailyStreak = 0
+
+    var beatPar: Bool { time <= parTime }
+    var hitCrystalGoal: Bool { crystals >= crystalGoal }
+    var points: Int {
+        StarRules.points(place: place, crystals: crystals, crystalGoal: crystalGoal, time: time, parTime: parTime)
+    }
+    var perfect: Bool { points >= StarRules.perfectPoints }
 }
 
 struct PodiumEntry: Equatable, Identifiable {
@@ -361,6 +418,17 @@ struct HUDSnapshot: Equatable {
     var flareActive: Bool
     var avalancheThreat: Bool
     var avalancheProgress: Float
+    /// Fraction of the combo window still open (1 = just chained, 0 = about to drop).
+    var comboFraction: Float = 0
+    /// Metres between the avalanche wall and the player; negative when no wall is running.
+    var avalancheGap: Float = -1
+    /// Sled colours, parallel to `rivalProgress`, so the progress rail can tell rivals apart.
+    var rivalColors: [SIMD3<Float>] = []
+    var parTime: TimeInterval = 0
+    var crystalGoal: Int = 0
+    var courseNumber: Int = 0
+    /// Seconds ahead (negative) or behind (positive) the best-run ghost; nil without a ghost.
+    var ghostGap: Float?
 
     static let empty = HUDSnapshot(
         place: 1,

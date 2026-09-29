@@ -27,7 +27,8 @@ struct GamePlaySurface: View {
             RaceHUDView(
                 hud: engine.hud,
                 paused: engine.paused,
-                rewardedReady: ads.rewardedReady
+                rewardedReady: ads.rewardedReady,
+                showHints: app.persistence.totalRaces < 2
             ) {
                 app.pause()
             } boostChanged: { held in

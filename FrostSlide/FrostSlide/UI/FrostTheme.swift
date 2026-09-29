@@ -33,6 +33,17 @@ enum FrostTheme {
         let seconds = t.truncatingRemainder(dividingBy: 60)
         return String(format: "%d'%05.2f\"", minutes, seconds)
     }
+
+    /// Whole-second target such as a par time: 0'42".
+    static func formatPar(_ t: TimeInterval) -> String {
+        let whole = Int(t.rounded())
+        return String(format: "%d'%02d\"", whole / 60, whole % 60)
+    }
+
+    /// A signed gap in seconds, always with its sign: +0.42 or -1.30.
+    static func formatGap(_ seconds: TimeInterval) -> String {
+        String(format: "%+.2f", seconds)
+    }
 }
 
 struct SnowfallOverlay: View {
@@ -87,6 +98,7 @@ struct FrostCard<Content: View>: View {
 
 struct FrostButton: View {
     var title: String
+    var subtitle: String? = nil
     var icon: String? = nil
     var color: Color = FrostTheme.ice
     var foreground: Color = .white
@@ -98,12 +110,21 @@ struct FrostButton: View {
                 if let icon {
                     Image(systemName: icon)
                 }
-                Text(title)
-                    .font(.custom("AvenirNext-Bold", size: 18))
+                VStack(spacing: 1) {
+                    Text(title)
+                        .font(.custom("AvenirNext-Bold", size: 18))
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.custom("AvenirNext-DemiBold", size: 12))
+                            .opacity(0.85)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                }
             }
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, subtitle == nil ? 16 : 11)
             .background(
                 Capsule(style: .continuous)
                     .fill(
@@ -117,5 +138,19 @@ struct FrostButton: View {
             .shadow(color: color.opacity(0.35), radius: 10, y: 5)
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Course metadata for menus. Building a `LevelDefinition` creates every prop in the course,
+/// so the menu and map read from one cached copy instead of rebuilding levels on each redraw.
+enum CourseInfo {
+    /// Filled on demand from the main thread, so launching to the menu builds one course, not 24.
+    private static var cache: [LevelID: LevelDefinition] = [:]
+
+    static func of(_ id: LevelID) -> LevelDefinition {
+        if let cached = cache[id] { return cached }
+        let level = LevelCatalog.level(id)
+        cache[id] = level
+        return level
     }
 }

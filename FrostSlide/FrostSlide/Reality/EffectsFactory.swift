@@ -95,6 +95,11 @@ final class SnowField {
     private let root = Entity()
     private var flakes: [Entity] = []
     private var velocities: [Float] = []
+    /// Landing puffs live in world space (not on the camera-following root) and fade out.
+    private var bursts: [(puff: ModelEntity, velocity: SIMD3<Float>, life: Float)] = []
+    private static let burstLife: Float = 0.55
+    private lazy var burstMesh = MeshResource.generateSphere(radius: 0.09)
+    private lazy var burstMaterial = RKMat.pbr(SIMD3(0.92, 0.96, 1.0), roughness: 0.7, alpha: 0.7)
 
     func attach(to parent: Entity, night: Bool) {
         root.name = "snow"
@@ -115,16 +120,17 @@ final class SnowField {
         }
     }
 
+    /// A ring of puffs kicked up where the sled lands. The old version parented these to the
+    /// camera-following root while using world coordinates, so they appeared far from the sled
+    /// and then joined the snowfall for good.
     func burst(at position: SIMD3<Float>) {
-        let mesh = MeshResource.generateSphere(radius: 0.09)
-        let mat = RKMat.pbr(SIMD3(0.92, 0.96, 1.0), roughness: 0.7, alpha: 0.7)
+        guard let world = root.parent else { return }
         for i in 0..<10 {
-            let puff = ModelEntity(mesh: mesh, materials: [mat])
             let a = Float(i) / 10 * 2 * Float.pi
+            let puff = ModelEntity(mesh: burstMesh, materials: [burstMaterial])
             puff.position = position + SIMD3(cos(a) * 0.55, 0.12, sin(a) * 0.55)
-            root.addChild(puff)
-            flakes.append(puff)
-            velocities.append(3.2)
+            world.addChild(puff)
+            bursts.append((puff, SIMD3(cos(a) * 2.6, 2.4, sin(a) * 2.6), Self.burstLife))
         }
     }
 
@@ -139,6 +145,20 @@ final class SnowField {
                     Float.random(in: -8...22)
                 )
             }
+        }
+        var i = 0
+        while i < bursts.count {
+            bursts[i].life -= dt
+            if bursts[i].life <= 0 {
+                bursts[i].puff.removeFromParent()
+                bursts.remove(at: i)
+                continue
+            }
+            bursts[i].velocity.y -= 9 * dt
+            bursts[i].puff.position += bursts[i].velocity * dt
+            let k = bursts[i].life / Self.burstLife
+            bursts[i].puff.scale = SIMD3(repeating: (0.6 + (1 - k) * 1.2) * max(0.2, k))
+            i += 1
         }
     }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var app: AppModel
+    @State private var confirmReset = false
 
     var body: some View {
         ZStack {
@@ -26,14 +27,16 @@ struct SettingsView: View {
                                 .padding(12)
                                 .background(Circle().fill(.white.opacity(0.85)))
                         }
+                        .accessibilityLabel("Back to menu")
                         Text("Settings")
                             .font(.custom("AvenirNext-Heavy", size: 30))
                             .foregroundStyle(FrostTheme.ink)
                         Spacer()
                     }
 
-                    toggleRow("Swipe steering", subtitle: "Drag left and right anywhere on the slope.", isOn: true, disabled: true)
-                    toggle("Tilt steering", subtitle: "Add accelerometer lean on top of swipe.", key: \.tiltSteering)
+                    swipeInfo
+                    sensitivityRow
+                    toggle("Tilt steering", subtitle: "Lean the phone to steer, on top of swiping.", key: \.tiltSteering)
                     toggle("Haptics", subtitle: "Taps for boost, collect, crash, and finish. Off when Reduce Motion is on.", key: \.hapticsEnabled)
                     toggle("Sound", subtitle: "Arcade blips. Silent switch and other audio are respected.", key: \.soundEnabled)
                     toggle("Best-run ghost", subtitle: "Race a translucent copy of your fastest line on this course.", key: \.showGhost)
@@ -72,6 +75,8 @@ struct SettingsView: View {
                                 )
                             }
                             .disabled(!open)
+                            .accessibilityLabel(open ? skin.title : "\(skin.title), locked, needs \(skin.starsRequired) stars")
+                            .accessibilityAddTraits(app.persistence.settings.selectedSkin == skin ? .isSelected : [])
                         }
                     }
 
@@ -81,7 +86,7 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Privacy Policy")
                                     .font(.custom("AvenirNext-Bold", size: 17))
-                                Text("TODO: replace https://example.com/frost-slide-privacy")
+                                Text("How Frost Slide handles your data")
                                     .font(FrostTheme.captionFont)
                                     .foregroundStyle(FrostTheme.inkSoft)
                             }
@@ -97,9 +102,17 @@ struct SettingsView: View {
                     }
 
                     FrostButton(title: "Reset progress", icon: "trash", color: FrostTheme.berry) {
-                        app.persistence.resetProgress()
+                        confirmReset = true
                     }
                     .padding(.top, 4)
+                    .confirmationDialog("Erase all progress?", isPresented: $confirmReset, titleVisibility: .visible) {
+                        Button("Erase stars, records and ghosts", role: .destructive) {
+                            app.persistence.resetProgress()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("Every course goes back to locked except the first. Your settings are kept. This can't be undone.")
+                    }
 
                     Spacer()
                     Text("Frost Slide 1.0.0  ·  com.frostslide.FrostSlide")
@@ -113,6 +126,59 @@ struct SettingsView: View {
         .onChange(of: app.persistence.settings) { _, new in
             AudioHaptics.shared.apply(settings: new)
             app.persistence.persist()
+        }
+    }
+
+    private var swipeInfo: some View {
+        FrostCard {
+            HStack(spacing: 12) {
+                Image(systemName: "hand.draw.fill")
+                    .font(.title3)
+                    .foregroundStyle(FrostTheme.ice)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Swipe steering")
+                        .font(.custom("AvenirNext-Bold", size: 17))
+                        .foregroundStyle(FrostTheme.ink)
+                    Text("Drag left and right anywhere on the slope.")
+                        .font(FrostTheme.captionFont)
+                        .foregroundStyle(FrostTheme.inkSoft)
+                }
+                Spacer()
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var sensitivityRow: some View {
+        let range = GameSettings.steerSensitivityRange
+        return FrostCard {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Steering sensitivity")
+                        .font(.custom("AvenirNext-Bold", size: 17))
+                        .foregroundStyle(FrostTheme.ink)
+                    Spacer()
+                    Text(String(format: "%.1fx", app.persistence.settings.steerSensitivity))
+                        .font(FrostTheme.captionFont)
+                        .foregroundStyle(FrostTheme.inkSoft)
+                        .monospacedDigit()
+                }
+                Slider(
+                    value: Binding(
+                        get: { Double(app.persistence.settings.steerSensitivity) },
+                        set: { value in
+                            app.persistence.updateSettings { $0.steerSensitivity = Float(value) }
+                        }
+                    ),
+                    in: Double(range.lowerBound)...Double(range.upperBound),
+                    step: 0.1
+                )
+                .tint(FrostTheme.ice)
+                .accessibilityLabel("Steering sensitivity")
+                Text("Higher turns the sled with a shorter swipe.")
+                    .font(FrostTheme.captionFont)
+                    .foregroundStyle(FrostTheme.inkSoft)
+            }
         }
     }
 

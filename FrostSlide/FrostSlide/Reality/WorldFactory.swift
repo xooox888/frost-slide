@@ -93,6 +93,12 @@ enum WorldFactory {
         }
     }
 
+    /// Track furniture wide enough that the banking would show if it stayed level.
+    private static let followsBank: Set<PropKind> = [
+        .arch, .ramp, .turboPad, .icePatch, .checkpoint, .finish, .startBanner,
+        .shortcut, .neonArch, .movingBridge, .bridge, .dock
+    ]
+
     static func makeProp(_ entity: PlacedEntity, level: LevelDefinition, path: TrackPath) -> Entity {
         let sample = path.sample(at: entity.progress)
         let pos = path.worldPosition(progress: entity.progress, lateral: entity.lateral, height: 0)
@@ -138,7 +144,12 @@ enum WorldFactory {
         case .crystalSpire: node = crystalSpire(scale: entity.scale)
         }
         node.position = pos
-        node.orientation = simd_quatf(angle: sample.heading + entity.yaw, axis: [0, 1, 0])
+        var orientation = simd_quatf(angle: sample.heading + entity.yaw, axis: [0, 1, 0])
+        if followsBank.contains(entity.kind) {
+            // Wide props sit on the tilted surface instead of floating over one side of it.
+            orientation = orientation * simd_quatf(angle: sample.bank, axis: [0, 0, 1])
+        }
+        node.orientation = orientation
         if entity.scale != 1, entity.kind != .building, entity.kind != .pine, entity.kind != .crate {
             node.scale = SIMD3(repeating: entity.scale)
         }
@@ -496,7 +507,57 @@ enum WorldFactory {
             RKMat.pbr(SIMD3(0.55, 0.85, 1.0), roughness: 0.08, metallic: 0.35, alpha: 0.7)
         )
         node.position.y = 0.03
+        // The slippery zone is an ellipse stretched along the track (see Tuning.icePatchStretch);
+        // draw exactly that, so the patch you see is the patch you slide on.
+        node.scale = [1, 1, Tuning.icePatchStretch]
         return node
+    }
+
+    /// A dropped peel: yellow petals splayed on the snow inside a warning ring, so it can't be
+    /// mistaken for the glowing orb that gives you one.
+    static func bananaPeel() -> Entity {
+        let root = Entity()
+        let yellow = RKMat.pbr(SIMD3(1.0, 0.86, 0.18), roughness: 0.35, emissive: SIMD3(0.30, 0.24, 0.02))
+        let brown = RKMat.pbr(SIMD3(0.35, 0.22, 0.08), roughness: 0.6)
+        for k in 0..<3 {
+            let angle = Float(k) * 2 * Float.pi / 3
+            let petal = RKEntity.model(.generateSphere(radius: 0.32), yellow)
+            petal.scale = [1.5, 0.22, 0.6]
+            petal.position = [cos(angle) * 0.34, 0.12, sin(angle) * 0.34]
+            petal.orientation = simd_quatf(angle: -angle, axis: [0, 1, 0])
+            root.addChild(petal)
+        }
+        let stalk = RKEntity.model(RKMesh.cylinder(radius: 0.06, height: 0.3), brown)
+        stalk.position = [0, 0.2, 0]
+        root.addChild(stalk)
+        let ring = RKEntity.model(
+            RKMesh.cylinder(radius: 0.85, height: 0.03),
+            RKMat.pbr(SIMD3(1.0, 0.35, 0.2), roughness: 0.3, emissive: SIMD3(0.5, 0.12, 0.05), alpha: 0.45)
+        )
+        ring.position.y = 0.03
+        root.addChild(ring)
+        return root
+    }
+
+    /// The avalanche: overlapping translucent puffs across the track, so it reads as a wave of
+    /// powder and never hard-blocks the view when it rolls over the camera.
+    static func avalancheCloud() -> Entity {
+        let root = Entity()
+        let soft = RKMat.pbr(SIMD3(0.94, 0.97, 1.0), roughness: 0.95, alpha: 0.78)
+        let dense = RKMat.pbr(SIMD3(0.85, 0.92, 1.0), roughness: 0.95, alpha: 0.9)
+        let puffs = 11
+        for i in 0..<puffs {
+            let t = Float(i) / Float(puffs - 1)
+            let radius = 1.7 + Float((i * 5) % 4) * 0.45
+            let puff = RKEntity.model(.generateSphere(radius: radius), i % 3 == 0 ? dense : soft)
+            puff.position = [
+                (t - 0.5) * 15,
+                radius * 0.9 + Float((i * 7) % 3) * 0.5,
+                Float((i * 3) % 3) * 0.6 - 0.6
+            ]
+            root.addChild(puff)
+        }
+        return root
     }
 
     static func lowBridge(width: Float) -> Entity {

@@ -11,9 +11,14 @@ struct PauseView: View {
                     Text("Paused")
                         .font(.custom("AvenirNext-Heavy", size: 32))
                         .foregroundStyle(FrostTheme.ink)
-                    Text(app.engine.hud.levelName)
-                        .font(FrostTheme.bodyFont)
-                        .foregroundStyle(FrostTheme.inkSoft)
+                    VStack(spacing: 3) {
+                        Text("Course \(app.engine.hud.courseNumber) · \(app.engine.hud.levelName)")
+                            .font(FrostTheme.bodyFont)
+                            .foregroundStyle(FrostTheme.inkSoft)
+                        Text("Par \(FrostTheme.formatPar(app.engine.hud.parTime))  ·  \(app.engine.hud.crystalGoal) crystals")
+                            .font(FrostTheme.captionFont)
+                            .foregroundStyle(FrostTheme.inkSoft.opacity(0.8))
+                    }
                     FrostButton(title: "Resume", icon: "play.fill", color: FrostTheme.ice) {
                         app.resume()
                     }

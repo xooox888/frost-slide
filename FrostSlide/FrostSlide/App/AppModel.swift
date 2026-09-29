@@ -27,19 +27,43 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func play(_ id: LevelID, daily: Bool = false) {
+    /// The course the menu's Race button starts: the first open course the player has never
+    /// finished, or, once everything open has been raced, the course they played last.
+    var nextCourse: LevelID {
+        let open = LevelID.allCases.filter { persistence.isUnlocked($0) }
+        if let fresh = open.first(where: { persistence.records[$0] == nil }) {
+            return fresh
+        }
+        return open.contains(selectedLevel) ? selectedLevel : (open.first ?? .villageDash)
+    }
+
+    /// Today's daily: which open course and what it asks for.
+    var dailyPick: (level: LevelID, goal: DailyChallenge.Goal) {
+        let unlocked = LevelID.allCases.filter { persistence.isUnlocked($0) }
+        return DailyChallenge.pick(unlocked: unlocked)
+    }
+
+    func play(_ id: LevelID, dailyGoal: DailyChallenge.Goal? = nil) {
         guard persistence.isUnlocked(id) else { return }
         selectedLevel = id
         lastResult = nil
         let ghost = persistence.settings.showGhost ? persistence.records[id]?.ghost : nil
-        engine.start(level: LevelCatalog.level(id), settings: persistence.settings, ghost: ghost, daily: daily)
+        engine.start(
+            level: LevelCatalog.level(id),
+            settings: persistence.settings,
+            ghost: ghost,
+            dailyGoal: dailyGoal
+        )
         screen = .playing
     }
 
+    func quickRace() {
+        play(nextCourse)
+    }
+
     func playDaily() {
-        let unlocked = LevelID.allCases.filter { persistence.isUnlocked($0) }
-        let pick = DailyChallenge.pick(unlocked: unlocked)
-        play(pick.level, daily: true)
+        let pick = dailyPick
+        play(pick.level, dailyGoal: pick.goal)
     }
 
     func resume() {
@@ -50,9 +74,22 @@ final class AppModel: ObservableObject {
         engine.paused = true
     }
 
+    /// Phone calls, notification pulls, the app switcher: stop the race instead of letting it
+    /// run unattended, and let the player resume from the pause menu.
+    func pauseForInterruption() {
+        guard screen == .playing, !engine.paused else { return }
+        switch engine.phase {
+        case .countdown, .racing:
+            engine.paused = true
+        default:
+            break
+        }
+    }
+
+    /// Restarts the current course. Going through `play` (rather than the engine's own
+    /// restart) means a rematch races the ghost of the run that was just saved.
     func restart() {
-        engine.restart()
-        screen = .playing
+        play(selectedLevel, dailyGoal: engine.dailyGoal)
     }
 
     func backToMap() {
@@ -76,8 +113,12 @@ final class AppModel: ObservableObject {
     func handleFinished(_ result: RaceResult) {
         var finished = result
         let before = persistence.totalStars
-        persistence.record(finished, ghost: engine.capturedGhost())
+        let outcome = persistence.record(finished, ghost: engine.capturedGhost())
         finished.unlockedSkin = persistence.newlyUnlockedSkin(before: before, after: persistence.totalStars)
+        finished.previousBest = outcome.previousBestTime
+        finished.newBest = outcome.newBestTime
+        finished.dailyMet = outcome.dailyMet
+        finished.dailyStreak = outcome.dailyStreak
         lastResult = finished
         persistence.persist()
         screen = .results

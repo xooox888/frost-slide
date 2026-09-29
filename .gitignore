@@ -12,3 +12,5 @@ timeline.xctimeline
 playground.xcworkspace
 .build/
 .swiftpm/
+__pycache__/
+*.pyc
