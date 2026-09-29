@@ -37,6 +37,11 @@ export class AppModel {
   readonly engine: GameEngine;
   /** Sounds and haptics; the results screen uses it for the star reveal. */
   readonly fx: EngineFx;
+  /** Test hooks (the `?autopilot` bot): run before every engine tick, and ticks per frame. */
+  readonly dev: { beforeTick: ((engine: GameEngine, dt: number) => void) | null; ticksPerFrame: number } = {
+    beforeTick: null,
+    ticksPerFrame: 1,
+  };
 
   /** The course the menu's Race button starts. */
   readonly nextCourse = computed<LevelID>(() => {

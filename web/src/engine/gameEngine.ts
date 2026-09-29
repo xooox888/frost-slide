@@ -191,6 +191,8 @@ export class GameEngine {
   avalancheThreat = false;
   ghostPose: GhostPose | null = null;
   dailyGoal: DailyGoal | null = null;
+  /** Counts calls to `start`, so a renderer can tell a new race (or a restart) from the last one. */
+  raceId = 0;
 
   /**
    * Reads the phone's sideways lean in g (as `CMAccelerometerData.acceleration.x`), or null
@@ -243,6 +245,7 @@ export class GameEngine {
     ghost: GhostTake | null = null,
     dailyGoal: DailyGoal | null = null,
   ): void {
+    this.raceId += 1;
     this.settings = settings;
     this.level = level;
     const path = TrackPath.build(level);

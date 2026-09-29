@@ -7,7 +7,8 @@
 import type { ReadonlySignal } from '@preact/signals';
 import type { GameSettings } from '../core/models';
 
-export type HapticStyle = 'light' | 'medium' | 'heavy';
+export type { HapticStyle } from '../engine/gameEngine';
+import type { HapticStyle } from '../engine/gameEngine';
 
 /** Short sound effects (the eight WAVs from the Swift app). */
 export interface AudioService {
@@ -39,14 +40,18 @@ export interface AdsService {
   readonly rewardedReady: ReadonlySignal<boolean>;
   /** Height in CSS pixels that a banner currently covers at the bottom of the screen. */
   readonly bannerHeight: ReadonlySignal<number>;
-  /** Asks for tracking permission if needed, then starts the ad SDK. */
+  /** The ad consent form must stay reachable (EEA and UK players): Settings shows a button. */
+  readonly privacyOptionsRequired: ReadonlySignal<boolean>;
+  /** Asks for consent and tracking permission if needed, then starts the ad SDK. */
   start(): Promise<void>;
   /** Shows or hides the menu banner. */
   setBannerVisible(visible: boolean): void;
   /** A full-screen ad, then `done` (right away if there is none to show). */
   showInterstitialThen(done: () => void): void;
-  /** A rewarded video; `onReward` only if the viewer earns it. */
+  /** A rewarded video; `onReward` only if the viewer earns it, `onSkip` otherwise. */
   showRewarded(onReward: () => void, onSkip: () => void): void;
+  /** Opens the ad consent form again. */
+  showPrivacyOptions(): void;
 }
 
 export type StoreBusy = 'none' | 'buying' | 'restoring';
@@ -109,4 +114,6 @@ export interface Services {
   reduceMotion: ReadonlySignal<boolean>;
   /** Called when the app goes to the background (calls, notification pulls, the app switcher). */
   onBackground(handler: () => void): void;
+  /** The first screen has rendered: hide the native launch screen. */
+  ready(): void;
 }
