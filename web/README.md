@@ -77,8 +77,8 @@ launch the native shell copies the Swift app's save and Remove Ads flag into the
 app reads (`ios/App/App/AppDelegate.swift`), so players keep their progress.
 
 `npm run ios` works only on a Mac. On Linux, `npx cap sync ios` still updates the project. The
-manual **iOS build** workflow (`.github/workflows/ios.yml`) compiles it unsigned on a macOS
-runner.
+**iOS build** workflow (`.github/workflows/ios.yml`) compiles it unsigned on a macOS runner
+whenever the native project or the plugin versions change, and on demand from the Actions tab.
 
 `npm run ios:assets` regenerates the app icon and launch image from the painted art.
 
