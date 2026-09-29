@@ -411,3 +411,7 @@
 .sheet-action:active {
   background: rgb(0 0 0 / 0.06);
 }
+
+.sheet-cancel:active {
+  background: #e5e5ea;
+}

@@ -390,6 +390,14 @@
   position: relative;
 }
 
+.hud-extras {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
 .hud-round {
   display: flex;
   flex: none;

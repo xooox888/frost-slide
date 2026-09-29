@@ -78,6 +78,9 @@ export class AppModel {
     services.analytics.apply(persistence.settings);
     if (persistence.settings.tiltSteering) void services.tilt.enable();
     services.onBackground(() => this.pauseForInterruption());
+    // The app opens on the menu, which shows a banner; goTo only runs on later screen changes.
+    // (The ad service remembers this until its SDK has started.)
+    services.ads.setBannerVisible(true);
   }
 
   /** The save data. Reading it subscribes the calling component to changes. */

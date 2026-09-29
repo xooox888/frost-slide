@@ -142,22 +142,27 @@ export function RaceHUD({ app, controls, showHints, inert }: RaceHUDProps) {
           )}
         </div>
         <span class="hud-spacer" />
-        {showRewarded && (
-          <button
-            type="button"
-            class="hud-round hud-refill"
-            aria-label="Watch a short video to refill turbo"
-            {...refill}
-          >
-            <SFSymbol name="play.rectangle.fill" />
-            <span>REFILL</span>
-          </button>
-        )}
-        {hud.bananaArmed && (
-          <button type="button" class="hud-round hud-peel" aria-label="Drop banana peel" {...peel}>
-            <SFSymbol name="leaf.fill" />
-            <span>PEEL</span>
-          </button>
+        {/* REFILL sits above PEEL: side by side, with the turbo plate and BOOST, they overflow a phone. */}
+        {(showRewarded || hud.bananaArmed) && (
+          <div class="hud-extras">
+            {showRewarded && (
+              <button
+                type="button"
+                class="hud-round hud-refill"
+                aria-label="Watch a short video to refill turbo"
+                {...refill}
+              >
+                <SFSymbol name="play.rectangle.fill" />
+                <span>REFILL</span>
+              </button>
+            )}
+            {hud.bananaArmed && (
+              <button type="button" class="hud-round hud-peel" aria-label="Drop banana peel" {...peel}>
+                <SFSymbol name="leaf.fill" />
+                <span>PEEL</span>
+              </button>
+            )}
+          </div>
         )}
         <HoldButton controls={controls} />
       </div>
