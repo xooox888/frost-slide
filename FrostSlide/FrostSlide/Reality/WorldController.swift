@@ -91,7 +91,7 @@ final class WorldController {
             snow.attach(to: worldRoot, night: level.palette.night)
         }
         if level.events.contains(where: { $0.kind == .avalanche }) {
-            let wall = RKEntity.box([18, 5.5, 2.4], SIMD3(0.92, 0.96, 1.0), roughness: 0.85)
+            let wall = WorldFactory.avalancheCloud()
             wall.name = "avalanche"
             wall.isEnabled = false
             worldRoot.addChild(wall)
@@ -108,9 +108,11 @@ final class WorldController {
             guard let entity = racerEntities[racer.id] else { continue }
             let pos = path.worldPosition(progress: racer.progress, lateral: racer.lateral, height: racer.height)
             entity.position = pos
+            let bank = path.sample(at: racer.progress).bank
             let qYaw = simd_quatf(angle: racer.yaw, axis: [0, 1, 0])
             let qPitch = simd_quatf(angle: racer.pitch, axis: [1, 0, 0])
-            let qRoll = simd_quatf(angle: racer.roll, axis: [0, 0, 1])
+            // The sled lies on the banked surface; its own lean is added on top.
+            let qRoll = simd_quatf(angle: racer.roll + bank, axis: [0, 0, 1])
             entity.orientation = qYaw * qPitch * qRoll
             entity.scale = [1, racer.squash, 1]
             guard let rig = rigs[racer.id] else { continue }
@@ -197,7 +199,8 @@ final class WorldController {
             view.environment.lighting.intensityExponent = night ? (flare ? 0.35 : -0.15) : 0.15
         }
 
-        let shake = engine.cameraShake * 0.16 + engine.landingPulse * 0.06
+        // Screen shake is motion the player asked us not to add, when Reduce Motion is on.
+        let shake = UIAccessibility.isReduceMotionEnabled ? 0 : engine.cameraShake * 0.16 + engine.landingPulse * 0.06
         let jitter = shake > 0.001
             ? SIMD3<Float>(Float.random(in: -1...1), Float.random(in: -1...1), 0) * shake
             : .zero
@@ -223,14 +226,23 @@ final class WorldController {
         }
         ghostEntity?.isEnabled = true
         ghostEntity?.position = path.worldPosition(progress: pose.progress, lateral: pose.lateral, height: pose.height)
+        // Face down the track like every other sled, instead of always along +z.
+        let sample = path.sample(at: pose.progress)
+        let qYaw = simd_quatf(angle: sample.heading, axis: [0, 1, 0])
+        let qPitch = simd_quatf(angle: sample.slope * 0.4, axis: [1, 0, 0])
+        let qBank = simd_quatf(angle: sample.bank, axis: [0, 0, 1])
+        ghostEntity?.orientation = qYaw * qPitch * qBank
     }
 
     private func syncAvalanche(engine: GameEngine, path: TrackPath) {
         guard let wall = avalancheWall else { return }
         wall.isEnabled = engine.avalancheThreat
         guard engine.avalancheThreat else { return }
-        let pos = path.worldPosition(progress: engine.avalancheFront, lateral: 0, height: 1.6)
-        wall.position = pos
+        // Square across the track at the wall's current position, billowing a little.
+        let sample = path.sample(at: engine.avalancheFront)
+        wall.position = path.worldPosition(progress: engine.avalancheFront, lateral: 0, height: 0)
+        wall.orientation = simd_quatf(angle: sample.heading, axis: [0, 1, 0]) * simd_quatf(angle: sample.bank, axis: [0, 0, 1])
+        wall.scale = [1, 1 + sin(spinTime * 5) * 0.05, 1]
     }
 
     private func syncPeels(engine: GameEngine, path: TrackPath) {
@@ -241,7 +253,7 @@ final class WorldController {
         }
         for peel in engine.droppedBananas {
             if peelEntities[peel.id] == nil {
-                let node = WorldFactory.powerOrb(SIMD3(1.0, 0.85, 0.15), "banana")
+                let node = WorldFactory.bananaPeel()
                 node.name = peel.id.uuidString
                 worldRoot.addChild(node)
                 peelEntities[peel.id] = node

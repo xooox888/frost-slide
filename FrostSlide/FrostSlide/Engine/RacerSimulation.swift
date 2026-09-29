@@ -33,6 +33,13 @@ struct Racer {
     var squash: Float
     var trailBoost: Float
     var flareTime: Float
+    /// Seconds of powered speed left. Only holding BOOST (while fuel lasts), turbo pads,
+    /// ramps and rockets grant it; `trailBoost` is the afterglow and only drives visuals.
+    var boostTime: Float = 0
+    /// Seconds left of the speed penalty after grinding along a wall.
+    var scrape: Float = 0
+    /// Crashes, splashes and avalanche burials so far.
+    var hits: Int = 0
 }
 
 struct LiveEntity {

@@ -21,6 +21,7 @@ struct FrostSlideApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var app: AppModel
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -38,5 +39,11 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.28), value: app.screen)
+        // A call, a notification pull or the app switcher must not leave a race running.
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active {
+                app.pauseForInterruption()
+            }
+        }
     }
 }

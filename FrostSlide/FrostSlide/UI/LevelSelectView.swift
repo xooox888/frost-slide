@@ -24,11 +24,12 @@ struct LevelSelectView: View {
                             .padding(12)
                             .background(Circle().fill(.white.opacity(0.18)))
                     }
+                    .accessibilityLabel("Back to menu")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Course Map")
                             .font(.custom("AvenirNext-Heavy", size: 28))
                             .foregroundStyle(.white)
-                        Text("\(app.persistence.totalStars) stars  ·  24 courses")
+                        Text("\(app.persistence.totalStars) of \(LevelID.allCases.count * 3) stars  ·  \(LevelID.allCases.count) courses")
                             .font(FrostTheme.captionFont)
                             .foregroundStyle(.white.opacity(0.7))
                     }
@@ -55,27 +56,40 @@ struct LevelSelectView: View {
     }
 
     private var dailyCard: some View {
-        let unlocked = LevelID.allCases.filter { app.persistence.isUnlocked($0) }
-        let pick = DailyChallenge.pick(unlocked: unlocked)
-        let playedToday = app.persistence.lastDailyKey == DailyChallenge.dateKey()
+        let pick = app.dailyPick
+        let level = CourseInfo.of(pick.level)
+        let done = app.persistence.dailyDoneToday
+        let streak = app.persistence.activeDailyStreak
         return Button {
             app.playDaily()
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: "calendar")
+                Image(systemName: done ? "checkmark" : pick.goal.symbol)
                     .font(.title2)
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(FrostTheme.berry))
+                    .background(Circle().fill(done ? FrostTheme.pine : FrostTheme.berry))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(playedToday ? "Daily done" : "Daily Challenge")
+                    Text(done ? "Daily complete" : "Daily · \(pick.goal.title)")
                         .font(.custom("AvenirNext-Heavy", size: 16))
                         .foregroundStyle(FrostTheme.ink)
-                    Text("\(LevelCatalog.level(pick.level).name)  ·  \(pick.tag)")
+                    Text("\(level.name)  ·  \(pick.goal.detail(parTime: level.parTime, crystalGoal: level.crystalStar))")
                         .font(FrostTheme.captionFont)
                         .foregroundStyle(FrostTheme.inkSoft)
+                        .lineLimit(2)
                 }
                 Spacer()
+                if streak > 0 {
+                    VStack(spacing: 1) {
+                        Image(systemName: "flame.fill")
+                            .foregroundStyle(FrostTheme.berry)
+                        Text("\(streak)")
+                            .font(.custom("AvenirNext-Heavy", size: 13))
+                            .foregroundStyle(FrostTheme.ink)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(streak)-day streak")
+                }
                 Image(systemName: "play.fill")
                     .foregroundStyle(FrostTheme.iceDeep)
             }
@@ -95,7 +109,7 @@ struct LevelSelectView: View {
                     .font(.custom("AvenirNext-Heavy", size: 16))
                     .foregroundStyle(.white)
                 Spacer()
-                Text("\(stars)/9")
+                Text("\(stars)/\(world.courses.count * 3)")
                     .font(FrostTheme.captionFont)
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -103,9 +117,8 @@ struct LevelSelectView: View {
                 .font(FrostTheme.captionFont)
                 .foregroundStyle(.white.opacity(0.65))
             ForEach(world.courses, id: \.self) { id in
-                let level = LevelCatalog.level(id)
                 LevelCard(
-                    level: level,
+                    level: CourseInfo.of(id),
                     unlocked: app.persistence.isUnlocked(id),
                     record: app.persistence.records[id]
                 ) {
@@ -141,12 +154,7 @@ struct LevelCard: View {
                         }
                         Spacer()
                         if unlocked {
-                            HStack(spacing: 3) {
-                                ForEach(1...3, id: \.self) { i in
-                                    Image(systemName: i <= (record?.bestStars ?? 0) ? "star.fill" : "star")
-                                        .foregroundStyle(i <= (record?.bestStars ?? 0) ? FrostTheme.ochre : FrostTheme.ink.opacity(0.2))
-                                }
-                            }
+                            starRow
                         } else {
                             Image(systemName: "lock.fill")
                                 .foregroundStyle(FrostTheme.inkSoft)
@@ -159,11 +167,7 @@ struct LevelCard: View {
                     HStack {
                         Label("\(level.rivals.count + 1) racers", systemImage: "person.3.fill")
                         Spacer()
-                        if let record, record.bestPlace < 90 {
-                            Text("Best \(FrostTheme.placeWord(record.bestPlace))")
-                        } else {
-                            Text(unlocked ? "Tap to race" : "Finish previous")
-                        }
+                        Text(footer)
                     }
                     .font(FrostTheme.captionFont)
                     .foregroundStyle(FrostTheme.ink.opacity(0.7))
@@ -182,23 +186,58 @@ struct LevelCard: View {
         }
         .buttonStyle(.plain)
         .disabled(!unlocked)
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(accessibilityText)
+        .accessibilityHint(unlocked ? "Starts the race" : "Finish the previous course to unlock")
     }
 
-    @ViewBuilder
+    /// Best result so far, or the par time to aim for on a course that has not been finished.
+    private var footer: String {
+        guard unlocked else { return "Finish previous" }
+        if let record, record.bestTime < 9000 {
+            return "Best \(FrostTheme.placeWord(record.bestPlace)) · \(FrostTheme.formatTime(record.bestTime))"
+        }
+        return "Par \(FrostTheme.formatPar(level.parTime))"
+    }
+
+    private var stars: Int { record?.bestStars ?? 0 }
+
+    private var starRow: some View {
+        HStack(spacing: 3) {
+            ForEach(1...3, id: \.self) { i in
+                Image(systemName: i <= stars ? "star.fill" : "star")
+                    .foregroundStyle(i <= stars ? FrostTheme.ochre : FrostTheme.ink.opacity(0.2))
+            }
+            if record?.perfect == true {
+                Image(systemName: "seal.fill")
+                    .foregroundStyle(FrostTheme.berry)
+                    .padding(.leading, 2)
+            }
+        }
+    }
+
+    private var accessibilityText: String {
+        var text = "Course \(level.id.order + 1), \(level.name). \(level.subtitle)."
+        if !unlocked {
+            return text + " Locked."
+        }
+        text += " \(stars) of 3 stars."
+        if record?.perfect == true { text += " Perfect run." }
+        return text + " " + footer + "."
+    }
+
+    /// A top-down sketch of the course itself, so every card is recognisably its own track.
     private var thumbnail: some View {
-        Group {
+        ZStack {
+            LinearGradient(colors: [accent, accent.opacity(0.45)], startPoint: .topLeading, endPoint: .bottomTrailing)
             if let name = thumbName {
                 Image(name)
                     .resizable()
                     .scaledToFill()
-            } else {
-                LinearGradient(colors: [accent, accent.opacity(0.45)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    .overlay(
-                        Image(systemName: symbol)
-                            .font(.title2)
-                            .foregroundStyle(.white.opacity(0.9))
-                    )
+                    .opacity(0.32)
             }
+            TrackPreview(level: level, color: .white)
         }
         .frame(width: 72, height: 96)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -212,8 +251,6 @@ struct LevelCard: View {
         default: return nil
         }
     }
-
-    private var symbol: String { level.id.world.symbol }
 
     private var accent: Color {
         switch level.theme {
@@ -230,5 +267,79 @@ struct LevelCard: View {
         case .neon: return Color(red: 1.0, green: 0.28, blue: 0.72)
         case .carnival: return Color(red: 1.0, green: 0.42, blue: 0.38)
         }
+    }
+}
+
+/// The course's centre line seen from above, start at the top, drawn from the same curve
+/// data the track is built from, so a hairpin course looks like a hairpin course.
+struct TrackPreview: View {
+    let level: LevelDefinition
+    var color: Color = .white
+
+    var body: some View {
+        Canvas { context, size in
+            let points = Self.outline(for: level)
+            guard points.count > 1 else { return }
+            var minX = points[0].x, maxX = points[0].x
+            var minY = points[0].y, maxY = points[0].y
+            for p in points {
+                minX = min(minX, p.x)
+                maxX = max(maxX, p.x)
+                minY = min(minY, p.y)
+                maxY = max(maxY, p.y)
+            }
+            let inset: CGFloat = 14
+            let spanX = max(maxX - minX, 1)
+            let spanY = max(maxY - minY, 1)
+            let scale = min((size.width - inset * 2) / spanX, (size.height - inset * 2) / spanY)
+            let originX = (size.width - spanX * scale) / 2 - minX * scale
+            let originY = (size.height - spanY * scale) / 2 - minY * scale
+
+            var line = Path()
+            for (index, p) in points.enumerated() {
+                let mapped = CGPoint(x: p.x * scale + originX, y: p.y * scale + originY)
+                if index == 0 {
+                    line.move(to: mapped)
+                } else {
+                    line.addLine(to: mapped)
+                }
+            }
+            let style = StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round)
+            let shadow = StrokeStyle(lineWidth: 6.5, lineCap: .round, lineJoin: .round)
+            context.stroke(line, with: .color(.black.opacity(0.28)), style: shadow)
+            context.stroke(line, with: .color(color), style: style)
+
+            if let first = points.first, let last = points.last {
+                let start = CGPoint(x: first.x * scale + originX, y: first.y * scale + originY)
+                let finish = CGPoint(x: last.x * scale + originX, y: last.y * scale + originY)
+                context.fill(Path(ellipseIn: CGRect(x: start.x - 4, y: start.y - 4, width: 8, height: 8)), with: .color(.green))
+                context.fill(Path(ellipseIn: CGRect(x: finish.x - 4, y: finish.y - 4, width: 8, height: 8)), with: .color(.red))
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    /// Centre line in map space: x to the right, y down the screen. The track heads along +z
+    /// with yaw measured toward +x, which on a top-down map with the start at the top puts
+    /// +z down the screen and +x to the right.
+    static func outline(for level: LevelDefinition, samples: Int = 90) -> [CGPoint] {
+        var points: [CGPoint] = []
+        points.reserveCapacity(samples)
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var yaw: CGFloat = 0
+        let step = CGFloat(level.length) / CGFloat(samples - 1)
+        for i in 0..<samples {
+            let t = Float(i) / Float(samples - 1)
+            var delta: Float = 0
+            for curve in level.curves where t >= curve.start && t <= curve.end {
+                delta += curve.yawRadians / max(0.001, curve.end - curve.start) / Float(samples - 1)
+            }
+            yaw += CGFloat(delta)
+            points.append(CGPoint(x: x, y: y))
+            x += step * sin(yaw)
+            y += step * cos(yaw)
+        }
+        return points
     }
 }

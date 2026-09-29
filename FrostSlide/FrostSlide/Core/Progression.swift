@@ -124,9 +124,62 @@ struct GhostSample: Codable, Equatable {
 struct GhostTake: Codable, Equatable {
     var time: TimeInterval
     var samples: [GhostSample]
+
+    /// A take is only worth replaying if it covers the run from the start. Takes saved by
+    /// the first recorder kept just the last 22 seconds, so the ghost would sit frozen
+    /// mid-course until the clock caught up; those are ignored until they are beaten.
+    var isUsable: Bool {
+        guard samples.count > 8, let first = samples.first else { return false }
+        return first.t < 1.5
+    }
 }
 
 enum DailyChallenge {
+    /// What today's run has to achieve. Every goal is judged from the race result, so the
+    /// tag shown on the menu is the rule that actually decides whether the day counts.
+    enum Goal: String, CaseIterable, Codable, Equatable {
+        case beatPar, topTwo, crystalHunt, cleanRun
+
+        var title: String {
+            switch self {
+            case .beatPar: return "Beat par"
+            case .topTwo: return "Top 2 finish"
+            case .crystalHunt: return "Crystal hunt"
+            case .cleanRun: return "Clean run"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .beatPar: return "timer"
+            case .topTwo: return "medal.fill"
+            case .crystalHunt: return "diamond.fill"
+            case .cleanRun: return "checkmark.seal.fill"
+            }
+        }
+
+        /// One-line rule, with the course's own numbers filled in.
+        func detail(parTime: TimeInterval, crystalGoal: Int) -> String {
+            switch self {
+            case .beatPar:
+                let whole = Int(parTime.rounded())
+                return String(format: "Finish in under %d:%02d", whole / 60, whole % 60)
+            case .topTwo: return "Finish 1st or 2nd"
+            case .crystalHunt: return "Collect \(crystalGoal) crystals"
+            case .cleanRun: return "Finish without a single crash"
+            }
+        }
+
+        func isMet(by result: RaceResult) -> Bool {
+            switch self {
+            case .beatPar: return result.beatPar
+            case .topTwo: return result.place <= 2
+            case .crystalHunt: return result.hitCrystalGoal
+            case .cleanRun: return result.crashes == 0
+            }
+        }
+    }
+
     static func dateKey(_ date: Date = Date()) -> String {
         let f = DateFormatter()
         f.calendar = Calendar(identifier: .gregorian)
@@ -136,7 +189,7 @@ enum DailyChallenge {
         return f.string(from: date)
     }
 
-    static func pick(unlocked: [LevelID], date: Date = Date()) -> (level: LevelID, tag: String) {
+    static func pick(unlocked: [LevelID], date: Date = Date()) -> (level: LevelID, goal: Goal) {
         let pool = unlocked.isEmpty ? [LevelID.villageDash] : unlocked.sorted()
         var hash: UInt64 = 2166136261
         for byte in dateKey(date).utf8 {
@@ -144,7 +197,15 @@ enum DailyChallenge {
             hash &*= 16777619
         }
         let level = pool[Int(hash % UInt64(pool.count))]
-        let tags = ["Beat par", "Top 2 finish", "Crystal hunt", "Clean run"]
-        return (level, tags[Int(hash / 7) % tags.count])
+        let goals = Goal.allCases
+        return (level, goals[Int((hash / 7) % UInt64(goals.count))])
+    }
+
+    /// Streak after completing the daily on `today`: it continues only if the previous
+    /// completion was yesterday (UTC); anything older starts over at 1.
+    static func streak(afterCompletingOn today: String, lastCompleted: String, current: Int, date: Date = Date()) -> Int {
+        if lastCompleted == today { return max(1, current) }
+        let yesterday = dateKey(date.addingTimeInterval(-86_400))
+        return lastCompleted == yesterday ? current + 1 : 1
     }
 }
