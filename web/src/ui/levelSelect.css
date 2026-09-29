@@ -1,0 +1,325 @@
+/* The course map (`LevelSelectView.swift`). */
+
+.map {
+  background: #fff;
+  color: #fff;
+}
+
+.map-backdrop {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgb(var(--night-rgb) / 0.92), rgb(var(--ice-deep-rgb) / 0.55), var(--snow));
+}
+
+.map-layout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--safe-top) var(--safe-right) calc(var(--safe-bottom) + var(--banner-h, 0px) + 6px) var(--safe-left);
+}
+
+.map-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px 0;
+}
+
+.map-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.map-title {
+  font-size: 28px;
+  font-weight: var(--heavy);
+}
+
+.map-summary {
+  color: rgb(255 255 255 / 0.7);
+  font-size: 13px;
+  font-weight: var(--demibold);
+  white-space: pre-wrap;
+}
+
+.map-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 0 18px;
+}
+
+.map-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 8px;
+}
+
+/* MARK: - Daily */
+
+.map-daily {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgb(255 255 255 / 0.92);
+  color: var(--ink);
+  text-align: left;
+}
+
+.map-daily-badge {
+  --knockout: var(--berry);
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--berry);
+  color: #fff;
+}
+
+.map-daily-badge.is-done {
+  --knockout: var(--pine);
+  background: var(--pine);
+}
+
+.map-daily-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.map-daily-title {
+  font-size: 16px;
+  font-weight: var(--heavy);
+}
+
+.map-daily-detail {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: var(--demibold);
+  white-space: pre-wrap;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.map-daily-streak {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  color: var(--berry);
+  font-size: 13px;
+  font-weight: var(--heavy);
+}
+
+.map-daily-streak > span {
+  color: var(--ink);
+}
+
+.map-daily-play {
+  color: var(--ice-deep);
+}
+
+.map-daily:active,
+.level-card:active:not(:disabled) {
+  opacity: 0.8;
+}
+
+/* Inside the white card, so the ring shows over both the dark and the light end of the backdrop. */
+.map-daily:focus-visible,
+.level-card:focus-visible {
+  outline: 3px solid var(--ice-deep);
+  outline-offset: -5px;
+}
+
+/* MARK: - Worlds */
+
+.map-world {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-world-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* White over the light end of the backdrop needs a soft dark halo to stay readable. */
+.map-world-head,
+.map-world-blurb {
+  text-shadow:
+    0 1px 2px rgb(var(--night-rgb) / 0.45),
+    0 0 12px rgb(var(--night-rgb) / 0.35);
+}
+
+.map-world-head .sf-symbol {
+  filter: drop-shadow(0 1px 2px rgb(var(--night-rgb) / 0.45));
+}
+
+.map-world-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: var(--heavy);
+}
+
+.map-world-stars {
+  color: rgb(255 255 255 / 0.7);
+  font-size: 13px;
+  font-weight: var(--demibold);
+}
+
+.map-world-blurb {
+  color: rgb(255 255 255 / 0.65);
+  font-size: 13px;
+  font-weight: var(--demibold);
+}
+
+/* MARK: - Course cards */
+
+.level-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 24px;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: inset 0 0 0 1.4px rgb(var(--accent-rgb) / 0.45);
+  color: var(--ink);
+  text-align: left;
+}
+
+.level-card.is-locked {
+  background: rgb(255 255 255 / 0.55);
+  box-shadow: inset 0 0 0 1.4px rgb(var(--accent-rgb) / 0.15);
+  opacity: 0.62;
+}
+
+.level-thumb {
+  position: relative;
+  flex: none;
+  width: 72px;
+  height: 96px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(to bottom right, rgb(var(--accent-rgb)), rgb(var(--accent-rgb) / 0.45));
+}
+
+.level-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.32;
+}
+
+.level-track {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.level-track polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.level-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.level-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.level-number {
+  color: rgb(var(--accent-rgb) / 0.95);
+  font-size: 20px;
+  font-weight: var(--heavy);
+}
+
+.level-names {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.level-name {
+  font-size: 18px;
+  font-weight: var(--bold);
+}
+
+.level-subtitle {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: var(--demibold);
+}
+
+.level-stars {
+  display: flex;
+  gap: 3px;
+  color: rgb(var(--ink-rgb) / 0.2);
+}
+
+.level-stars .is-earned {
+  color: var(--ochre);
+}
+
+.level-perfect {
+  margin-left: 2px;
+  color: var(--berry);
+}
+
+.level-lock {
+  color: var(--ink-soft);
+}
+
+.level-blurb {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: var(--medium);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.level-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgb(var(--ink-rgb) / 0.7);
+  font-size: 13px;
+  font-weight: var(--demibold);
+}
+
+.level-racers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

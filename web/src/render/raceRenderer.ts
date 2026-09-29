@@ -123,6 +123,8 @@ export class RaceRenderer {
   dispose(): void {
     this.teardown();
     this.renderer.dispose();
+    // Free the WebGL context now: every race opens a new one, and Safari caps how many live.
+    this.renderer.forceContextLoss();
   }
 
   /** Draw calls and triangles in the last frame, and the current resolution scale. */

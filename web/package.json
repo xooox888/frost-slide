@@ -23,7 +23,8 @@
     "cap:sync": "npm run build && cap sync",
     "ios": "npm run build && cap sync ios && cap open ios",
     "catalog:snapshot": "tsx scripts/catalog-snapshot.ts",
-    "trace": "tsx scripts/trace.ts"
+    "trace": "tsx scripts/trace.ts",
+    "ios:assets": "node scripts/ios-assets.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",
