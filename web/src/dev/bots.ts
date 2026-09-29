@@ -165,10 +165,12 @@ export class Bot {
       return;
     }
     const p = this.profile;
-    this.clock += dt;
+    // The Swift bot keeps its clock in 32-bit floats; its 0.7 s boost toggle is exactly 42 frames
+    // at 60 fps, so the rounding decides which frame it lands on. Round the same way.
+    this.clock = Math.fround(this.clock + dt);
     if (p.steers) {
       if (this.clock >= this.nextDecision) {
-        this.nextDecision = this.clock + p.reaction;
+        this.nextDecision = Math.fround(this.clock + p.reaction);
         this.target = this.decide(engine, me, path);
       }
       const e = this.target - me.lateral;
@@ -178,7 +180,7 @@ export class Bot {
     }
     // Boost in bursts.
     if (this.clock >= this.nextBoostToggle) {
-      this.nextBoostToggle = this.clock + 0.7;
+      this.nextBoostToggle = Math.fround(this.clock + 0.7);
       this.boostOn = me.turbo > 0.03 && this.rng.nextUnit() < p.boostUse;
     }
     engine.boostHeld = this.boostOn && me.turbo > 0.02;

@@ -84,3 +84,24 @@ func dumpTrace(courses first: Int, _ last: Int, solo: Bool = false) {
         }
     }
 }
+
+/// One bot race, sampled every `step` seconds: `bottrace <course> <bot> <seed>`.
+func dumpBotTrace(course index: Int, profile: BotProfile, seed: UInt64) {
+    let engine = GameEngine()
+    engine.start(level: LevelCatalog.level(LevelID.allCases[index]), settings: .default)
+    let bot = Bot(profile, seed: seed)
+    let dt: Float = 1.0 / 60.0
+    let step = Double(ProcessInfo.processInfo.environment["TRACE_STEP"] ?? "") ?? 0.5
+    var next = 0.0
+    var clock = 0.0
+    for _ in 0..<(60 * 60) {
+        bot.update(engine, dt: dt)
+        engine.tick(dt: TimeInterval(dt))
+        clock += Double(dt)
+        if engine.phase == .finished { break }
+        if clock >= next, let me = engine.playerRacer {
+            next += step
+            print(String(format: "BOT %.2f %.6f %.5f %.5f %.5f %d %d", clock, me.progress, me.lateral, me.speed, me.turbo, me.crystals, me.hits))
+        }
+    }
+}

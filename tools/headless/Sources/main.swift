@@ -122,6 +122,13 @@ case "standings":
 case "catalog":
     dumpCatalog()
 
+case "bottrace":
+    guard args.count > 4, let index = Int(args[2]), let profile = BotProfile.named(args[3]), let seed = UInt64(args[4]) else {
+        print("usage: bottrace <course index 0-23> <bot> <seed>")
+        exit(1)
+    }
+    dumpBotTrace(course: index, profile: profile, seed: seed)
+
 case "trace":
     dumpTrace(courses: intArg(2, default: 0), intArg(3, default: courses.count - 1), solo: args.contains("solo"))
 

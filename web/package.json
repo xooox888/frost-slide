@@ -39,6 +39,7 @@
     "@preact/signals": "^2.11.2",
     "@telemetrydeck/sdk": "^2.0.4",
     "canvas-confetti": "^1.9.4",
+    "lucide-preact": "^1.48.0",
     "preact": "^10.29.8",
     "three": "0.186.1"
   },
