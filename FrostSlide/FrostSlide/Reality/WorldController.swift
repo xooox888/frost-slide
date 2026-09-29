@@ -9,7 +9,7 @@ final class WorldController {
     private var worldRoot = Entity()
     private var camera = PerspectiveCamera()
     private var racerEntities: [UUID: Entity] = [:]
-    private var rigs: [UUID: PenguinRig] = [:]
+    private var rigs: [UUID: RacerRig] = [:]
     private var sky: Entity?
     private var spray: SnowSpray?
     private var pickupEntities: [UUID: Entity] = [:]
@@ -64,11 +64,11 @@ final class WorldController {
         racerEntities = [:]
         rigs = [:]
         for racer in racers {
-            let entity = PenguinFactory.make(sledColor: racer.sledColor)
+            let entity = RacerFactory.make(sledColor: racer.sledColor)
             entity.name = racer.id.uuidString
             worldRoot.addChild(entity)
             racerEntities[racer.id] = entity
-            rigs[racer.id] = PenguinRig(entity)
+            rigs[racer.id] = RacerRig(entity)
         }
 
         camera = PerspectiveCamera()
@@ -118,7 +118,8 @@ final class WorldController {
             guard let rig = rigs[racer.id] else { continue }
             rig.shroud?.isEnabled = racer.ghostTime > 0
             rig.glow?.light.intensity = 280 + racer.trailBoost * 700 + racer.rocketTime * 400
-            // Flap hard on boost and in the air; idle sway otherwise. Scarf flutters with speed.
+            // Arms flap hard on boost and in the air, and sway gently otherwise. The scarf
+            // flutters with speed, and the big tail wags along (faster while flapping).
             let seed = Float(abs(racer.id.hashValue % 97))
             let flapping = racer.trailBoost > 0 || racer.airborne || racer.rocketTime > 0
             let flap = flapping ? sin(spinTime * 22 + seed) * 0.55 : sin(spinTime * 3 + seed) * 0.06
@@ -126,6 +127,8 @@ final class WorldController {
             rig.flipR?.orientation = simd_quatf(angle: 0.85 + flap, axis: [0, 0, 1])
             let flutter = sin(spinTime * 15 + seed) * min(1, racer.speed / 16) * 0.4
             rig.tail?.orientation = simd_quatf(angle: flutter, axis: [0, 1, 0]) * simd_quatf(angle: 0.25, axis: [1, 0, 0])
+            let wag = flapping ? sin(spinTime * 9 + seed) * 0.3 : sin(spinTime * 3.2 + seed) * 0.12
+            rig.fluff?.orientation = simd_quatf(angle: wag + flutter * 0.4, axis: [0, 1, 0])
         }
 
         for live in engine.entities {
@@ -216,7 +219,7 @@ final class WorldController {
             return
         }
         if ghostEntity == nil {
-            let ghost = PenguinFactory.make(sledColor: SIMD3(0.75, 0.88, 1.0))
+            let ghost = RacerFactory.make(sledColor: SIMD3(0.75, 0.88, 1.0))
             ghost.name = "bestGhost"
             if let shroud = ghost.findEntity(named: "ghostShroud") {
                 shroud.isEnabled = true
@@ -276,11 +279,12 @@ final class WorldController {
     }
 }
 
-/// Cached handles into a penguin entity so per-frame animation skips tree searches.
-private struct PenguinRig {
+/// Cached handles into a racer entity so per-frame animation skips tree searches.
+private struct RacerRig {
     let flipL: Entity?
     let flipR: Entity?
     let tail: Entity?
+    let fluff: Entity?
     let shroud: Entity?
     let glow: PointLight?
 
@@ -288,6 +292,7 @@ private struct PenguinRig {
         flipL = entity.findEntity(named: "flipL")
         flipR = entity.findEntity(named: "flipR")
         tail = entity.findEntity(named: "scarfTail")
+        fluff = entity.findEntity(named: "fluffTail")
         shroud = entity.findEntity(named: "ghostShroud")
         glow = entity.findEntity(named: "sledGlow") as? PointLight
     }

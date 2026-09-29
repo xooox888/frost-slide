@@ -1,6 +1,6 @@
 # Frost Slide
 
-A native iOS downhill sled racer. You are a penguin on a glowing cyan disc, carving an ice trail through six original courses.
+A native iOS downhill sled racer. You are a red panda cub in a beanie on a glowing cyan disc, carving an ice trail through 24 original courses.
 
 Built with **Swift + SwiftUI** for menus, HUD, results, and settings, and **RealityKit** for all 3D gameplay (Entity / Component, `ARView` in non-AR game mode embedded in SwiftUI). No SceneKit. Portrait, iPhone first, iOS 17+. Bundle id: **`com.frostslide.FrostSlide`**. Version **1.0.0** (build 1).
 
@@ -177,10 +177,10 @@ FrostSlide/FrostSlide/
   Info.plist              Display name, ATT, AdMob app id, SKAdNetwork
 ```
 
-The race viewport is `ARView(cameraMode: .nonAR, automaticallyConfigureSession: false)` — a RealityKit game view, not AR. Penguin, disc sled, track ribbon, props, ice-trail stamps, and snowfall are RealityKit entities. Simulation stays on the arcade spline; RealityKit is the renderer only. iOS 17 cannot use `RealityView` (iOS 18+), so `ARView` is the supported embed.
+The race viewport is `ARView(cameraMode: .nonAR, automaticallyConfigureSession: false)` — a RealityKit game view, not AR. The racers (a red panda cub per sled, built from primitives in `Reality/RacerFactory.swift`), disc sleds, track ribbon, props, ice-trail stamps, and snowfall are RealityKit entities. Simulation stays on the arcade spline; RealityKit is the renderer only. iOS 17 cannot use `RealityView` (iOS 18+), so `ARView` is the supported embed.
 
 Sound uses an **ambient** audio session (hardware mute + other audio respected). Haptics and snowfall skip when **Reduce Motion** is on.
 
 ## License / assets
 
-All 3D props, penguins, tracks, UI, and marketing stills are original Frost Slide work. Do not ship third-party sled-game assets or names.
+All 3D props, racers, tracks, UI, and marketing stills are original Frost Slide work. Do not ship third-party sled-game assets or names.

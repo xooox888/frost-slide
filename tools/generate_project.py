@@ -27,7 +27,7 @@ SWIFT_FILES = [
     "Reality/RKMaterials.swift",
     "Reality/RKMesh.swift",
     "Reality/WorldController.swift",
-    "Reality/PenguinFactory.swift",
+    "Reality/RacerFactory.swift",
     "Reality/WorldFactory.swift",
     "Reality/EffectsFactory.swift",
     "Ads/AdConfig.swift",
