@@ -20,26 +20,41 @@ If SPM cannot resolve, File → Add Package Dependencies and paste the same GitH
 
 ## How to play
 
-- **Steer:** drag left/right. Optional tilt in Settings. Steering is snappy; landings kill slide.
-- **Turbo:** hold **BOOST**. Crystals refill the meter. Near-misses and combo chains add a turbo crumb.
-- **Near miss / combo:** skim a hazard or chain crystals. HUD shows **xN**. The chain dies if you wait too long.
-- **Ghost:** a translucent copy of your best run on that course (Settings toggle).
+- **Steer:** drag left or right anywhere on the slope. Small drags are precise, a full swipe is full lock. Tune it with **Steering sensitivity** in Settings, or add tilt steering.
+- **Turbo:** hold **BOOST**. Crystals fill the meter, so a clean run through the crystal lanes is worth about three seconds. Near misses and combo chains add a little more. Tapping BOOST as the light turns green gives a launch.
+- **Racing line:** the inside of a bend is a shorter road, and bends push you toward the outside wall. Hold the inside line to save time; grinding the wall costs speed.
+- **Ice:** patches of ice keep you sliding sideways and dull your steering. Plan your line before you reach them.
+- **Near miss / combo:** skim a hazard or chain crystals. HUD shows **xN** with a ring that runs down as the chain expires.
+- **Ghost:** a translucent copy of your best run on that course, with a live "ahead/behind" readout (Settings toggle).
 - **Flares:** night / blizzard pickups that punch a hole in the dark.
-- **Shortcuts:** cyan gates skip a bite of track. **Avalanche** walls chase you on later courses — stay ahead.
+- **Shortcuts:** cyan gates skip a bite of track.
+- **Avalanche:** on seven later courses a wall of snow starts running when you reach the marked stretch. The HUD counts down how far behind you it is (it also shows on the progress rail) and the screen rumbles as it closes in. Spend your turbo to stay ahead. If it catches you it buries you once: big loss of speed, but it then runs on ahead. Rivals behind you get buried too.
+- **Water (harbor courses):** a splash puts you back on the track a little way behind, slowed and stunned. You lose about three seconds.
 - **Rewarded refill (optional):** if turbo is low, tap **REFILL** once per race to watch a video. Never forced.
-- **Peel:** pick up a banana, tap **PEEL** to slow rivals.
+- **Peel:** pick up a banana, tap **PEEL** to drop it behind you. It trips the first sled that hits it and then it is gone. Three peels at most, and they fade after 20 seconds.
+- Crystals and power-ups are yours alone: rivals earn their turbo over time and never empty a lane before you reach it.
+- The race pauses by itself if you leave the app or a call comes in.
 - Finish a course to unlock the next. Stars unlock sled skins in Settings.
-- **Daily Challenge** picks one unlocked course from the UTC date.
+- **Daily Challenge** picks one unlocked course and one goal from the UTC date: *Beat par*, *Top 2 finish*, *Crystal hunt* or *Clean run*. The day only counts when the goal is met, a miss can be retried, and consecutive days build a streak.
 
 Unlock-all exists only in **DEBUG** builds. Release / TestFlight / App Store binaries ignore it.
 
 ### Stars
 
-1 star for finishing. Extra stars from place, crystal target, and par time.
+Finishing is worth 1 star. Bonus points add up to two more:
+
+| Bonus | Points |
+| --- | --- |
+| Win the race | 2 |
+| Finish 2nd | 1 |
+| Reach the crystal goal | 1 |
+| Beat the par time | 1 |
+
+Two points make 3 stars. A win alone is enough, but a runner-up (or someone who can't catch the pack on a hard course) can still get there with the crystal and par goals. Score all four and it's a **perfect run** (a seal on the course card). The goals for a course are shown during the countdown and again on the pause menu; the results screen shows where every point came from.
 
 ### Courses (24, 8 worlds)
 
-Early worlds are wide and forgiving. Later worlds tighten the lane, add moving bridges, shortcut gates, and avalanche chases. 3–5 AI rivals each. Rubber-band keeps packs readable without stealing the win.
+Early worlds are wide and forgiving. Later worlds tighten the lane, add moving bridges, shortcut gates, and avalanche chases. 3–5 AI rivals each. Rival strength is calibrated course by course so a solid player wins the early worlds almost every time and the last courses are a real fight. A smooth rubber band keeps packs readable without stealing the win.
 
 **Village & Market**
 1. Village Dash — ice-crystal arches, wide streets  
@@ -142,6 +157,10 @@ Suggested questionnaire answers:
 
 Original stills live in [`Marketing/screenshots/`](Marketing/screenshots/) (menu hero, brand badge, Village Dash, Ice Cave, Aurora Night). They are Frost Slide–branded (navy + electric cyan, ice-crystal gates), not live Simulator captures. Capture those on a Mac before submission.
 
+## Headless balance harness
+
+`tools/headless/` compiles the real `Core/` and `Engine/` sources on Linux (with small stand-ins for SwiftUI, CoreMotion and the renderer) and races them with scripted bots of five skill levels. It runs the engine self-tests, sweeps win rates, par and crystal-goal rates across all 24 courses, and re-calibrates rival strength. See its README. `tools/validate_tracks.py` remains as a quick, dependency-free geometry check.
+
 ## Architecture
 
 ```
@@ -150,7 +169,7 @@ FrostSlide/FrostSlide/
   Ads/                    AdConfig, AdManager, BannerAdView
   App/                    Navigation + persistence
   Core/                   Levels, save data, audio/haptics
-  Engine/                 Arcade spline sim (progress + lateral + air)
+  Engine/                 Arcade spline sim (progress + lateral + air); Tuning holds every balance constant
   Core/Progression.swift  Worlds, sled skins, daily challenge, ghost takes
   Reality/                RealityKit world (WorldController, factories, meshes)
   UI/                     Menu, map, HUD, results, settings
