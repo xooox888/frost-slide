@@ -1,0 +1,35 @@
+# SwiftLint runs on every Xcode build through the SwiftLintBuildToolPlugin (see the README), and
+# by hand with `swiftlint lint` from this folder. The build plugin only looks for this file inside
+# the project folder, which is why it lives next to FrostSlide.xcodeproj. The rules are tuned to
+# this codebase: game maths keeps its short names and long functions, and nothing here is an error,
+# so lint can warn but never stop a build.
+included:
+  - FrostSlide
+  - FrostSlideTests
+excluded:
+  - FrostSlide.xcodeproj
+  - .build
+
+disabled_rules:
+  - todo                    # TODOs mark the App Store set-up steps in AdConfig and AnalyticsConfig
+  - file_length
+  - type_body_length
+  - function_body_length
+  - cyclomatic_complexity
+  - large_tuple
+  - function_parameter_count
+
+force_try: warning
+force_cast: warning
+
+identifier_name:
+  min_length: 1
+  max_length: 60
+  validates_start_with_lowercase: warning
+
+# The course catalog is data: one rival line per course, several hundred columns wide.
+line_length:
+  warning: 240
+  error: 400
+  ignores_comments: true
+  ignores_urls: true

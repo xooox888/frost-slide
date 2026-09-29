@@ -10,13 +10,15 @@ Original Frost Slide art and UI only — not Sled Surfers (or any other game) as
 
 1. Install Xcode 15 or newer (iOS 17 SDK). Xcode 16+ recommended so Swift Package Manager can resolve Google Mobile Ads.
 2. Open `FrostSlide/FrostSlide.xcodeproj`.
-3. Let Xcode resolve **GoogleMobileAds** from  
-   `https://github.com/googleads/swift-package-manager-google-mobile-ads.git`.
+3. Let Xcode resolve the Swift packages (first time only, a few minutes):
+   **GoogleMobileAds** (ads), **ConfettiSwiftUI** (results screen), **TelemetryDeck** (anonymous stats),
+   **SwiftLintPlugins** (lint on every build) and **swift-snapshot-testing** (tests only).
+   The first build asks you to *Trust & Enable* the SwiftLint plugin.
 4. Select the **FrostSlide** scheme and an iPhone simulator.
 5. Set your Personal Team under Signing & Capabilities if asked.
 6. Run. Portrait. First launch may prompt App Tracking Transparency (decline is fine; ads still try to fill).
 
-If SPM cannot resolve, File → Add Package Dependencies and paste the same GitHub URL. Product name: `GoogleMobileAds`. CocoaPods is not required.
+If SPM cannot resolve, File → Add Package Dependencies and paste the package's GitHub URL. CocoaPods is not required.
 
 ## How to play
 
@@ -124,6 +126,28 @@ Test IDs (already wired):
 - Interstitial: `ca-app-pub-3940256099942544/4411468910`
 - Rewarded: `ca-app-pub-3940256099942544/1712485313`
 
+## Remove Ads purchase (StoreKit 2)
+
+One non-consumable, **`com.frostslide.FrostSlide.removeads`**, sold from a card in Settings (with *Restore purchases*). It removes the menu banners and the full-screen ads between screens; the optional **REFILL** video stays because the player asks for it.
+
+- **Before it can sell:** in App Store Connect create an *In-App Purchase → Non-Consumable* with that product ID, a price, a display name and a review screenshot, and add it to the app version you submit.
+- **Testing without the store:** Product → Scheme → Edit Scheme → Run → Options → *StoreKit Configuration* → `Store/Products.storekit`. Purchases then work in the Simulator, and Debug → StoreKit → Manage Transactions can refund or reset them.
+- `StoreManager` caches the answer between launches, so a paying player never sees an ad flash up, and an offline launch can only switch ads off. Refunds arrive as revoked transactions.
+
+## Usage stats (TelemetryDeck)
+
+Anonymous events for balancing: `Race.started`, `Race.finished` (course, place, stars, crashes, time), `Race.abandoned` (course, percent of the way), `Daily.completed` and `Store.adsRemoved`. No names, no advertising ID; TelemetryDeck hashes a per-install identifier before it leaves the phone.
+
+- **Off until you set it up:** create an app at [telemetrydeck.com](https://telemetrydeck.com) and paste its App ID into `Analytics/AnalyticsConfig.swift`. Until then nothing is sent.
+- Players can switch it off in Settings → *Share anonymous stats* (on by default); that stops the SDK rather than muting it. Debug builds send nothing, and neither do unit tests.
+- `PrivacyInfo.xcprivacy` declares product-interaction and device-ID data for analytics (not linked, not tracking). Answer the **App Privacy** questions in App Store Connect the same way.
+
+## Tests and lint
+
+- **Run tests:** Product → Test (⌘U). `LogicTests` are plain checks. `ScreenSnapshotTests` (swift-snapshot-testing) draw the race HUD, results and settings screens on a small and a large iPhone. **The first run only records reference pictures and reports "No reference was found": run again to compare, then commit the `FrostSlideTests/__Snapshots__` folder.** Record and compare on the same simulator model and iOS version.
+- **Lint:** SwiftLint runs on every build as a build-tool plugin, with the rules in `FrostSlide/.swiftlint.yml` (it has to sit next to the `.xcodeproj` for the plugin to find it). Nothing there is an error, so lint warns but never blocks a build. From a terminal, `swiftlint lint` in the `FrostSlide` folder does the same. On CI, pass `-skipPackagePluginValidation` to `xcodebuild` so the plugin can run without the trust prompt.
+- The engine has its own Linux test tool: [`tools/headless`](tools/headless/README.md).
+
 ## Privacy policy
 
 **TODO — placeholder:** [https://example.com/frost-slide-privacy](https://example.com/frost-slide-privacy)
@@ -139,7 +163,7 @@ Suggested questionnaire answers:
 - **No** gambling, contests, or loot boxes
 - **No** user-generated content, social, or chat
 - Ads: yes (AdMob). Unrestricted web access: no
-- In-app purchases: none in 1.0.0
+- In-app purchases: one non-consumable, **Remove Ads**
 - Made for Kids: **no** (ads + ATT). Do not check Made for Kids while using AdMob
 
 ## Shipping checklist
@@ -149,9 +173,10 @@ Suggested questionnaire answers:
 3. Replace AdMob test IDs (see above) and the privacy-policy URL.
 4. Archive a **Release** build (Product → Archive) and upload with Organizer / Transporter.
 5. Screenshots: use `Marketing/screenshots/` as a starting set, then capture live Simulator stills of Village Dash, Ice Cave, and Aurora Night on a 6.7" iPhone.
-6. Fill Privacy Nutrition Labels (UserDefaults for saves; tracking only if the player allows ATT for ads).
-7. Export compliance: **ITSAppUsesNonExemptEncryption** is already `false` (HTTPS only).
-8. Submit for TestFlight, then App Store review.
+6. Create the **Remove Ads** in-app purchase (see above) and paste the TelemetryDeck App ID if you want stats.
+7. Fill Privacy Nutrition Labels (UserDefaults for saves; usage data and a device ID for analytics if enabled; tracking only if the player allows ATT for ads).
+8. Export compliance: **ITSAppUsesNonExemptEncryption** is already `false` (HTTPS only).
+9. Submit for TestFlight, then App Store review.
 
 ## Marketing visuals
 
@@ -165,16 +190,20 @@ Original stills live in [`Marketing/screenshots/`](Marketing/screenshots/) (menu
 
 ```
 FrostSlide/FrostSlide/
-  FrostSlideApp.swift     App + ATT/AdMob start
+  FrostSlideApp.swift     App + ATT/AdMob/store start
   Ads/                    AdConfig, AdManager, BannerAdView
+  Store/                  StoreManager (Remove Ads, StoreKit 2), Products.storekit test config
+  Analytics/              Anonymous usage stats (TelemetryDeck) and its config
   App/                    Navigation + persistence
   Core/                   Levels, save data, audio/haptics
   Engine/                 Arcade spline sim (progress + lateral + air); Tuning holds every balance constant
   Core/Progression.swift  Worlds, sled skins, daily challenge, ghost takes
   Reality/                RealityKit world (WorldController, factories, meshes)
   UI/                     Menu, map, HUD, results, settings
-  PrivacyInfo.xcprivacy   UserDefaults reason CA92.1
+  PrivacyInfo.xcprivacy   UserDefaults reason CA92.1, analytics data types
   Info.plist              Display name, ATT, AdMob app id, SKAdNetwork
+FrostSlide/FrostSlideTests/  Logic checks and snapshot pictures of the main screens
+FrostSlide/.swiftlint.yml    Lint rules (next to the .xcodeproj, where the build plugin looks)
 ```
 
 The race viewport is `ARView(cameraMode: .nonAR, automaticallyConfigureSession: false)` — a RealityKit game view, not AR. The racers (a red panda cub per sled, built from primitives in `Reality/RacerFactory.swift`), disc sleds, track ribbon, props, ice-trail stamps, and snowfall are RealityKit entities. Simulation stays on the arcade spline; RealityKit is the renderer only. iOS 17 cannot use `RealityView` (iOS 18+), so `ARView` is the supported embed.

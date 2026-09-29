@@ -29,7 +29,7 @@ final class StoreManager: ObservableObject {
     /// A short result for the settings card ("Purchase restored", "Waiting for approval", ...).
     @Published private(set) var message: String?
 
-    private static let cacheKey = "frostslide.adsRemoved"
+    static let cacheKey = "frostslide.adsRemoved"
     private let defaults: UserDefaults
     private var product: Product?
     private var updatesTask: Task<Void, Never>?

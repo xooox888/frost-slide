@@ -198,7 +198,7 @@ enum RKTexture {
     static func track(_ pal: LevelPalette) -> TextureResource? {
         let w = 256, h = 512
         return make(width: w, height: h) { ctx in
-            let W = CGFloat(w), H = CGFloat(h)
+            let texW = CGFloat(w), texH = CGFloat(h)
             do {
                 let space = CGColorSpaceCreateDeviceRGB()
                 // Albedo below 1 so the sun doesn't clip the snow to flat white.
@@ -209,24 +209,24 @@ enum RKTexture {
                     colors: [cg(edge), cg(mid), cg(mid), cg(edge)] as CFArray,
                     locations: [0, 0.22, 0.78, 1]
                 ) {
-                    ctx.drawLinearGradient(grad, start: .zero, end: CGPoint(x: W, y: 0), options: [])
+                    ctx.drawLinearGradient(grad, start: .zero, end: CGPoint(x: texW, y: 0), options: [])
                 }
                 ctx.setStrokeColor(cg(pal.ice * 0.6, 0.3))
                 ctx.setLineWidth(3)
                 for u: CGFloat in [0.31, 0.43, 0.57, 0.69] {
-                    ctx.move(to: CGPoint(x: u * W, y: 0))
-                    ctx.addLine(to: CGPoint(x: u * W, y: H))
+                    ctx.move(to: CGPoint(x: u * texW, y: 0))
+                    ctx.addLine(to: CGPoint(x: u * texW, y: texH))
                 }
                 ctx.strokePath()
             }
             let rail = pal.night ? pal.accent : SIMD3<Float>(0.25, 0.85, 1.0)
             ctx.setFillColor(cg(rail, 0.9))
-            ctx.fill(CGRect(x: W * 0.03, y: 0, width: W * 0.045, height: H))
-            ctx.fill(CGRect(x: W * 0.925, y: 0, width: W * 0.045, height: H))
+            ctx.fill(CGRect(x: texW * 0.03, y: 0, width: texW * 0.045, height: texH))
+            ctx.fill(CGRect(x: texW * 0.925, y: 0, width: texW * 0.045, height: texH))
             var rng = SystemRandomNumberGenerator()
             for _ in 0..<160 {
-                let x = CGFloat.random(in: 0.08...0.92, using: &rng) * W
-                let y = CGFloat.random(in: 0..<H, using: &rng)
+                let x = CGFloat.random(in: 0.08...0.92, using: &rng) * texW
+                let y = CGFloat.random(in: 0..<texH, using: &rng)
                 let r = CGFloat.random(in: 1...2.6, using: &rng)
                 ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.9))
                 ctx.fillEllipse(in: CGRect(x: x, y: y, width: r, height: r))

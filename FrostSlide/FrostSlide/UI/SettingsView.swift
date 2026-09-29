@@ -41,7 +41,11 @@ struct SettingsView: View {
                     toggle("Haptics", subtitle: "Taps for boost, collect, crash, and finish. Off when Reduce Motion is on.", key: \.hapticsEnabled)
                     toggle("Sound", subtitle: "Arcade blips. Silent switch and other audio are respected.", key: \.soundEnabled)
                     toggle("Best-run ghost", subtitle: "Race a translucent copy of your fastest line on this course.", key: \.showGhost)
-                    toggle("Share anonymous stats", subtitle: "Which courses get played and finished, so we can fix the hard spots. Nothing that identifies you.", key: \.shareUsageData)
+                    toggle(
+                        "Share anonymous stats",
+                        subtitle: "Which courses get played and finished, so we can fix the hard spots. Nothing that identifies you.",
+                        key: \.shareUsageData
+                    )
                     #if DEBUG
                     toggle("Unlock all courses", subtitle: "DEBUG only — stripped from Release / App Store builds.", key: \.unlockAll)
                     #endif

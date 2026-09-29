@@ -51,7 +51,8 @@ struct SnowfallOverlay: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        if reduceMotion {
+        // Also still under unit tests, so snapshot pictures don't depend on the clock.
+        if reduceMotion || RuntimeEnvironment.isTesting {
             Color.clear
         } else {
         TimelineView(.animation) { timeline in
@@ -98,8 +99,8 @@ struct FrostCard<Content: View>: View {
 
 struct FrostButton: View {
     var title: String
-    var subtitle: String? = nil
-    var icon: String? = nil
+    var subtitle: String?
+    var icon: String?
     var color: Color = FrostTheme.ice
     var foreground: Color = .white
     var action: () -> Void
