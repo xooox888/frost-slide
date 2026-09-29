@@ -10,6 +10,8 @@ import Foundation
 //   rivals                                    each rival's pace against an idle player
 //   avalanche <runs>                          burial rates on the avalanche courses
 //   standings <course> <bot>                  one race, with times and crash counts
+//   catalog                                   every course as JSON (see Dump.swift)
+//   trace [first last] [solo]                 a scripted race per course, sampled twice a second
 
 let args = CommandLine.arguments
 let courses = LevelID.allCases
@@ -116,6 +118,12 @@ case "standings":
         exit(1)
     }
     probeStandings(courses[index], profile: profile, seed: 9)
+
+case "catalog":
+    dumpCatalog()
+
+case "trace":
+    dumpTrace(courses: intArg(2, default: 0), intArg(3, default: courses.count - 1), solo: args.contains("solo"))
 
 default:
     print("unknown command \(args[1])")
