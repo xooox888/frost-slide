@@ -105,6 +105,8 @@ enum RKMesh {
         desc.normals = MeshBuffers.Normals(normals)
         desc.textureCoordinates = MeshBuffers.TextureCoordinates(uvs)
         desc.primitives = .triangles(indices)
+        // A mesh built from our own valid buffers cannot fail; a crash here means a programming error.
+        // swiftlint:disable:next force_try
         return try! MeshResource.generate(from: [desc])
     }
 
@@ -145,6 +147,8 @@ enum RKMesh {
         desc.positions = MeshBuffers.Positions(positions)
         desc.normals = MeshBuffers.Normals(normals)
         desc.primitives = .triangles(indices)
+        // A mesh built from our own valid buffers cannot fail; a crash here means a programming error.
+        // swiftlint:disable:next force_try
         return try! MeshResource.generate(from: [desc])
     }
 }

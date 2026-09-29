@@ -20,6 +20,7 @@ final class AppModel: ObservableObject {
     init(persistence: GamePersistence = .load()) {
         self.persistence = persistence
         AudioHaptics.shared.apply(settings: persistence.settings)
+        Analytics.apply(settings: persistence.settings)
         engine.onFinished = { [weak self] result in
             Task { @MainActor in
                 self?.handleFinished(result)
@@ -55,6 +56,7 @@ final class AppModel: ObservableObject {
             dailyGoal: dailyGoal
         )
         screen = .playing
+        Analytics.track(.raceStarted(course: id.order + 1, daily: dailyGoal != nil))
     }
 
     func quickRace() {
@@ -93,13 +95,25 @@ final class AppModel: ObservableObject {
     }
 
     func backToMap() {
+        trackAbandonIfRacing()
         engine.stop()
         screen = .levelSelect
     }
 
     func backToMenu() {
+        trackAbandonIfRacing()
         engine.stop()
         screen = .menu
+    }
+
+    /// Leaving a race that is still on (from the pause menu) tells us where players give up.
+    private func trackAbandonIfRacing() {
+        switch engine.phase {
+        case .countdown, .racing:
+            Analytics.track(.raceAbandoned(course: selectedLevel.order + 1, progress: Int((engine.hud.progress * 100).rounded())))
+        default:
+            break
+        }
     }
 
     func nextLevel() {
@@ -122,5 +136,16 @@ final class AppModel: ObservableObject {
         lastResult = finished
         persistence.persist()
         screen = .results
+        Analytics.track(.raceFinished(
+            course: finished.level.order + 1,
+            place: finished.place,
+            stars: finished.stars,
+            perfect: finished.perfect,
+            seconds: finished.time,
+            crashes: finished.crashes
+        ))
+        if finished.daily && finished.dailyMet {
+            Analytics.track(.dailyCompleted(streak: finished.dailyStreak))
+        }
     }
 }

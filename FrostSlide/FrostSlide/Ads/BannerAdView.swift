@@ -5,14 +5,19 @@ import UIKit
 import GoogleMobileAds
 #endif
 
-/// Adaptive banner for menus only. Renders an empty reserved strip if ads fail.
+/// Adaptive banner for menus only. Renders an empty reserved strip if ads fail, and nothing
+/// at all once the player has bought "Remove Ads".
 struct BannerAdView: View {
+    @EnvironmentObject private var store: StoreManager
+
     var body: some View {
-        BannerAdRepresentable()
-            .frame(height: 50)
-            .frame(maxWidth: .infinity)
-            .background(FrostTheme.ink.opacity(0.08))
-            .accessibilityLabel("Advertisement")
+        if !store.adsRemoved {
+            BannerAdRepresentable()
+                .frame(height: 50)
+                .frame(maxWidth: .infinity)
+                .background(FrostTheme.ink.opacity(0.08))
+                .accessibilityLabel("Advertisement")
+        }
     }
 }
 

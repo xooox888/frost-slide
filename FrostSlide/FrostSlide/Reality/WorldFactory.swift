@@ -144,12 +144,11 @@ enum WorldFactory {
         case .crystalSpire: node = crystalSpire(scale: entity.scale)
         }
         node.position = pos
-        var orientation = simd_quatf(angle: sample.heading + entity.yaw, axis: [0, 1, 0])
-        if followsBank.contains(entity.kind) {
-            // Wide props sit on the tilted surface instead of floating over one side of it.
-            orientation = orientation * simd_quatf(angle: sample.bank, axis: [0, 0, 1])
-        }
-        node.orientation = orientation
+        let heading = simd_quatf(angle: sample.heading + entity.yaw, axis: [0, 1, 0])
+        // Wide props sit on the tilted surface instead of floating over one side of it.
+        node.orientation = followsBank.contains(entity.kind)
+            ? heading * simd_quatf(angle: sample.bank, axis: [0, 0, 1])
+            : heading
         if entity.scale != 1, entity.kind != .building, entity.kind != .pine, entity.kind != .crate {
             node.scale = SIMD3(repeating: entity.scale)
         }

@@ -1,3 +1,4 @@
+import ConfettiSwiftUI
 import SwiftUI
 
 struct ResultsView: View {
@@ -6,6 +7,8 @@ struct ResultsView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Stars revealed so far; they pop in one after another.
     @State private var shownStars = 0
+    /// Bumped once to fire the confetti burst after a three-star run.
+    @State private var confetti = 0
 
     var body: some View {
         ZStack {
@@ -48,6 +51,22 @@ struct ResultsView: View {
         .safeAreaInset(edge: .bottom) {
             actions
         }
+        .overlay(
+            ConfettiCannon(
+                trigger: $confetti,
+                num: app.lastResult?.perfect == true ? 70 : 44,
+                colors: [FrostTheme.ice, FrostTheme.ochre, FrostTheme.berry, FrostTheme.grape, .white],
+                confettiSize: 11,
+                rainHeight: 700,
+                openingAngle: .degrees(40),
+                closingAngle: .degrees(140),
+                radius: 380,
+                repetitions: app.lastResult?.perfect == true ? 2 : 1,
+                repetitionInterval: 0.7,
+                hapticFeedback: false
+            )
+            .allowsHitTesting(false)
+        )
         .onAppear(perform: revealStars)
     }
 
@@ -310,6 +329,13 @@ struct ResultsView: View {
                     shownStars = i
                 }
                 AudioHaptics.shared.tap(.light)
+            }
+        }
+        // Three stars earns a burst once the last star has landed. Reduce Motion skips it above.
+        if stars == 3 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3 + 0.4 * 3 + 0.25) {
+                confetti += 1
+                AudioHaptics.shared.comboHit()
             }
         }
     }
