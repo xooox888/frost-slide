@@ -8,7 +8,7 @@ final class IceTrail {
     private let maxStamps = 70
     private let streak = MeshResource.generateBox(size: [0.5, 0.012, 1], cornerRadius: 0.006)
     private let soft = RKMat.pbr(SIMD3(0.35, 0.75, 1.0), roughness: 0.1, emissive: SIMD3(0.05, 0.30, 0.60), alpha: 0.35)
-    private let hot = RKMat.pbr(SIMD3(0.30, 0.85, 1.0), roughness: 0.1, emissive: SIMD3(0.10, 0.50, 0.90), alpha: 0.5)
+    private let hot = RKMat.pbr(SIMD3(0.25, 0.92, 1.0), roughness: 0.08, emissive: SIMD3(0.18, 0.65, 1.0), alpha: 0.62)
 
     init(parent: Entity) {
         root.name = "iceTrail"
@@ -29,7 +29,7 @@ final class IceTrail {
         }
         for (idx, s) in stamps.enumerated() {
             let fade = Float(idx + 1) / Float(stamps.count)
-            s.scale = [fade * (intense ? 1.25 : 1), 1, s.scale.z]
+            s.scale = [fade * (intense ? 1.42 : 1.05), 1, s.scale.z]
         }
     }
 

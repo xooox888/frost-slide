@@ -99,6 +99,22 @@ enum RacePhase: Equatable {
     case finished
 }
 
+/// Readable speed bands for the HUD. Cruise is the unpowered line, push is held turbo,
+/// turbo is a pad or rocket (or a very fast powered push).
+enum SpeedBand: String, Equatable {
+    case cruise
+    case push
+    case turbo
+
+    var title: String {
+        switch self {
+        case .cruise: return "CRUISE"
+        case .push: return "PUSH"
+        case .turbo: return "TURBO"
+        }
+    }
+}
+
 struct PlacedEntity: Identifiable, Codable {
     var id: UUID
     var kind: PropKind
@@ -434,6 +450,10 @@ struct HUDSnapshot: Equatable {
     var courseNumber: Int = 0
     /// Seconds ahead (negative) or behind (positive) the best-run ghost; nil without a ghost.
     var ghostGap: Float?
+    /// Cruise / push / turbo, derived from speed and powered time so the HUD can colour the pace.
+    var speedBand: SpeedBand = .cruise
+    /// True while BOOST, a pad or a rocket is actually adding speed.
+    var boosting: Bool = false
 
     static let empty = HUDSnapshot(
         place: 1,

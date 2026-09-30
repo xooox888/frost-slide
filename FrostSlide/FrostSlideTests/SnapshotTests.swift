@@ -38,6 +38,7 @@ final class ScreenSnapshotTests: XCTestCase {
             $0.combo = 4
             $0.comboFraction = 0.6
             $0.speedKph = 78
+            $0.speedBand = .push
             $0.avalancheThreat = true
             $0.avalancheGap = 19
             $0.toast = "Near miss x4"
@@ -55,6 +56,8 @@ final class ScreenSnapshotTests: XCTestCase {
             $0.bananaArmed = true
             $0.ghostGap = -0.42
             $0.speedKph = 91
+            $0.speedBand = .turbo
+            $0.boosting = true
         }
         check(hudOverBackdrop(hud), named: "ghost")
     }

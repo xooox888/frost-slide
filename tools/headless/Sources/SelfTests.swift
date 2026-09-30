@@ -338,6 +338,28 @@ func testHudThrottleAndLaunch() {
     check(abs(early - none) < 0.5, "holding from the start gives no launch (\(early) vs \(none))")
 }
 
+func testFeelTuning() {
+    section("feel: rubber band, speed cap, punchy pads")
+    let mid = Tuning.rubberBandFactor(lead: -0.07, rivalProgress: 0.4)
+    let late = Tuning.rubberBandFactor(lead: -0.07, rivalProgress: 0.94)
+    let far = Tuning.rubberBandFactor(lead: -0.22, rivalProgress: 0.45)
+    let ahead = Tuning.rubberBandFactor(lead: 0.09, rivalProgress: 0.5)
+    check(mid > 1.02 && mid < 1.09, "mid-race catch-up \(mid)")
+    check(late < mid, "finish catch-up \(late) should fade vs mid \(mid)")
+    check(far < mid, "far-behind warp \(far) should not beat a close rival \(mid)")
+    check(ahead < 1 && ahead > 0.90, "leaders ease off \(ahead)")
+
+    var top: Float = 0
+    var solo = LevelCatalog.level(.villageDash)
+    solo.rivals = []
+    _ = play(solo, profile: .expert, seed: 2) { engine in
+        engine.boostHeld = true
+        if let speed = engine.playerRacer?.speed { top = max(top, speed) }
+    }
+    check(top.isFinite && top <= Tuning.hardSpeedCap + 0.05, "stacked boost/rocket speed \(top) should stay under \(Tuning.hardSpeedCap)")
+    check(top > 16, "powered sled should still be fast (\(top))")
+}
+
 func testFuzz() {
     section("fuzz: random inputs never break the simulation")
     var rng = SplitMix64(seed: 99)
@@ -390,6 +412,7 @@ func runSelfTests() {
     testPersistence()
     testSettingsCoding()
     testHudThrottleAndLaunch()
+    testFeelTuning()
     testFuzz()
     print("\n\(passes) checks passed, \(failures) failed")
     exit(failures == 0 ? 0 : 1)

@@ -6,54 +6,78 @@ import simd
 /// hunting through the simulation. Speeds are m/s, accelerations m/s², times seconds.
 enum Tuning {
     // Steering: lateral acceleration at full lock, and how fast sideways speed bleeds off.
-    // acceleration / drag = top sideways speed (about 6.8 m/s on snow, response ~0.12 s).
-    static let steerAccel: Float = 58
-    static let snowDrag: Float = 8.5
-    static let airDrag: Float = 3.0
-    static let iceDrag: Float = 1.4
-    static let iceSteerScale: Float = 0.55
-    static let airSteerScale: Float = 0.35
-    static let stunSteerScale: Float = 0.25
+    // Raising accel and drag together keeps peak slide (~6.7 m/s) but settles in ~0.09 s.
+    static let steerAccel: Float = 72
+    static let snowDrag: Float = 10.8
+    static let airDrag: Float = 3.2
+    static let iceDrag: Float = 1.35
+    static let iceSteerScale: Float = 0.48
+    static let airSteerScale: Float = 0.38
+    static let stunSteerScale: Float = 0.28
     /// Ice patches are ellipses: the stretch multiplies their radius along the track.
     static let icePatchStretch: Float = 1.8
+    /// Small corrections stay closer to linear; full lock still eases in.
+    static let steerShapeMin: Float = 0.72
+    static let steerShapeGain: Float = 0.28
+    /// Damps swipe noise without a noticeable lag.
+    static let steerSmoothLambda: Float = 20
+    static let leanInput: Float = 0.64
+    static let leanSlide: Float = 0.04
+    static let leanLambda: Float = 12
+    static let yawFromSlide: Float = 0.042
+    /// Extra lateral drag when steering into a bend, so a carved line holds.
+    static let carveGrip: Float = 3.2
 
     // Curves push the sled toward the outside wall; riding the wall costs speed.
-    static let cornerPull: Float = 3.0
-    static let cornerPullCap: Float = 14
+    static let cornerPull: Float = 2.7
+    static let cornerPullCap: Float = 13
     static let wallScrapeSpeed: Float = 0.9
     static let wallScrapeTime: Float = 0.25
     /// Limits on how much shorter (or longer) a racing line can be than the centre line.
     static let lineFactorRange: ClosedRange<Float> = 0.9...1.1
+    /// Extra top speed for a settled inside line.
+    static let lineSpeedBonus: Float = 0.04
 
     // A crash. Speed left after the hit, how long the sled is stunned (steering and top speed
     // are crippled), and the grace period after that before it can be hit again. Together they
     // cost roughly a second, so a mistake is felt but a clean run is never out of reach.
-    static let crashSpeedFactor: Float = 0.34
-    static let crashStun: Float = 0.7
-    static let crashInvuln: Float = 1.0
+    static let crashSpeedFactor: Float = 0.36
+    static let crashStun: Float = 0.58
+    static let crashInvuln: Float = 0.95
     /// Top speed while stunned, as a fraction of normal.
     static let stunSpeedFactor: Float = 0.32
     /// How far back a splash puts the sled, in metres (it never goes behind the last checkpoint).
     static let splashSetback: Float = 30
+    /// Small speed gift when the stun ends so recovery feels like a re-entry, not a stall.
+    static let recoverPush: Float = 2.6
 
     // Rivals.
-    static let aiSteerAuthority: Float = 0.85
+    static let aiSteerAuthority: Float = 0.88
     static let aiTurboRegen: Float = 0.045
-    static let bandSlow: Float = 0.08
-    static let bandCatchUp: Float = 0.09
+    static let bandSlow: Float = 0.07
+    static let bandCatchUp: Float = 0.065
 
     // Turbo. Crystals fuel it, holding BOOST burns it, and a pad or rocket gives a burst
     // without spending any. These numbers set how much driving well is worth: a full
     // crystal run is worth about three seconds of boost over a course.
-    static let boostSpeedMultiplier: Float = 1.32
-    static let boostDrain: Float = 0.26
-    static let boostPush: Float = 20
-    static let crystalFuel: Float = 0.09
-    static let comboFuel: Float = 0.04
-    static let padBoostTime: Float = 1.3
+    static let boostSpeedMultiplier: Float = 1.28
+    static let boostDrain: Float = 0.28
+    static let boostPush: Float = 24
+    static let crystalFuel: Float = 0.085
+    static let comboFuel: Float = 0.045
+    static let padBoostTime: Float = 1.15
     /// Powered speed outlives a frame of boosting by this long, so frame timing can't flicker it.
     static let boostGrace: Float = 0.05
-    static let rocketSpeedMultiplier: Float = 1.36
+    static let rocketSpeedMultiplier: Float = 1.30
+    /// Instant punch from a pad / rocket that can briefly exceed the powered cap.
+    static let padBurst: Float = 4.4
+    static let rocketBurst: Float = 5.2
+    static let overspeedDecay: Float = 7.0
+    static let hardSpeedCap: Float = 26
+    static let crystalTick: Float = 0.5
+    /// Speed-band thresholds in m/s (HUD km/h is this × 4.2).
+    static let pushSpeed: Float = 17.6
+    static let turboSpeed: Float = 20.2
 
     // Avalanche: how far behind the player the wall appears when it starts running.
     static let avalancheHeadStart: Float = 0.045
@@ -64,6 +88,18 @@ enum Tuning {
 
     // The HUD only needs to redraw about this often.
     static let hudInterval: Float = 1.0 / 30.0
+
+    /// Soft rubber band: close packs mid-race, then fade so the last stretch is earned.
+    /// Far-behind rivals are not warped back into contention.
+    static func rubberBandFactor(lead: Float, rivalProgress: Float) -> Float {
+        let finishFade = GameMath.smoothstep(0.82, 0.96, rivalProgress)
+        if lead >= 0 {
+            return 1 - bandSlow * GameMath.smoothstep(0.018, 0.11, lead)
+        }
+        let trail = -lead
+        let window = GameMath.smoothstep(0.02, 0.075, trail) * (1 - GameMath.smoothstep(0.12, 0.18, trail))
+        return 1 + bandCatchUp * window * (1 - finishFade * 0.9)
+    }
 }
 
 final class GameEngine: ObservableObject {
@@ -110,7 +146,7 @@ final class GameEngine: ObservableObject {
     private(set) var combo = 0
     private(set) var comboMax = 0
     private var comboTimer: Float = 0
-    private static let comboWindow: Float = 1.65
+    private static let comboWindow: Float = 1.85
     private(set) var nearMisses = 0
     private(set) var avalancheFront: Float = 0
     private(set) var avalancheThreat = false
@@ -128,6 +164,9 @@ final class GameEngine: ObservableObject {
     private var peelBorn: [UUID: TimeInterval] = [:]
     private var bumpCooldown: Float = 0
     private var scrapeHaptic: Float = 0
+    private var steerSmoothed: Float = 0
+    private var fovKick: Float = 0
+    private var playerWasStunned = false
     private(set) var dailyGoal: DailyChallenge.Goal?
 
     var dailyRun: Bool { dailyGoal != nil }
@@ -161,6 +200,9 @@ final class GameEngine: ObservableObject {
         spreadStartGrid(path: path!)
         bumpCooldown = 0
         scrapeHaptic = 0
+        steerSmoothed = 0
+        fovKick = 0
+        playerWasStunned = false
         entities = level.entities.map {
             LiveEntity(definition: $0, collected: false, destroyed: false, liveLateral: $0.lateral, phase: $0.progress * 17)
         }
@@ -390,6 +432,8 @@ final class GameEngine: ObservableObject {
                     toast("Finish!")
                     phase = .finished
                     finishHold = 0
+                    cameraShake = max(cameraShake, 0.55)
+                    fovKick = max(fovKick, 0.85)
                 }
             }
         }
@@ -398,6 +442,8 @@ final class GameEngine: ObservableObject {
         bumpCooldown = max(0, bumpCooldown - dt)
         scrapeHaptic = max(0, scrapeHaptic - dt)
         cameraShake = max(0, cameraShake - dt * 3)
+        fovKick = max(0, fovKick - dt * 7)
+        recoverPlayerIfNeeded()
         separateRacers(path: path)
         landingPulse = max(0, landingPulse - dt * 2.4)
         tickCombo(dt: dt)
@@ -428,6 +474,7 @@ final class GameEngine: ObservableObject {
         // Nothing left to wait for once everyone is over the line.
         if racers.allSatisfy(\.finished) { finishHold = max(finishHold, 1.15) }
         cameraShake = max(0, cameraShake - dt * 3)
+        fovKick = max(0, fovKick - dt * 7)
         landingPulse = max(0, landingPulse - dt * 2.4)
         if toastTimer > 0 {
             toastTimer -= dt
@@ -491,12 +538,13 @@ final class GameEngine: ObservableObject {
     /// Swipe (scaled by the sensitivity setting, eased so small drags stay precise) plus tilt.
     private func effectiveSteer() -> Float {
         let raw = GameMath.clamp(steerInput * settings.steerSensitivity, -1, 1)
-        let shaped = raw * (0.55 + 0.45 * abs(raw))
+        let shaped = raw * (Tuning.steerShapeMin + Tuning.steerShapeGain * abs(raw))
         return GameMath.clamp(shaped + tiltInput, -1, 1)
     }
 
     private func stepPlayer(index i: Int, dt: Float, path: TrackPath) {
-        applySteering(index: i, input: effectiveSteer(), dt: dt, path: path)
+        steerSmoothed = GameMath.damp(steerSmoothed, effectiveSteer(), lambda: Tuning.steerSmoothLambda, dt: dt)
+        applySteering(index: i, input: steerSmoothed, dt: dt, path: path)
         if dropBananaRequested {
             dropBananaRequested = false
             dropBanana(from: i)
@@ -513,8 +561,17 @@ final class GameEngine: ObservableObject {
         let here = path.sample(at: racer.progress)
         let ahead = path.sample(at: min(1, racer.progress + 0.05))
 
-        // Base line: lean toward the inside of the next bend.
-        var targetLateral = -GameMath.wrapAngle(ahead.heading - here.heading) * 5.0
+        // Base line: lean toward the inside of the next bend, then bias by personality
+        // so the pack fans across the road instead of sharing one groove.
+        let turn = GameMath.wrapAngle(ahead.heading - here.heading)
+        var targetLateral = -turn * 5.0
+        let insideSign: Float = turn > 0 ? -1 : 1
+        switch racer.personality {
+        case .aggressive: targetLateral += insideSign * 1.15
+        case .cautious: targetLateral -= insideSign * 1.35
+        case .hoarder: targetLateral += insideSign * 0.25
+        case .none: break
+        }
 
         // Keep clear of neighbours.
         var crowd: Float = 0
@@ -527,10 +584,19 @@ final class GameEngine: ObservableObject {
         }
         targetLateral += crowd * 1.6
 
-        if racer.personality == .aggressive, let player = playerRacer, !player.finished,
-           abs(player.progress - racer.progress) < 0.05 {
-            // Aggressive rivals lean on the player.
-            targetLateral = GameMath.lerp(targetLateral, player.lateral, 0.45)
+        if let player = playerRacer, !player.finished, abs(player.progress - racer.progress) < 0.055 {
+            switch racer.personality {
+            case .aggressive:
+                // Close the door or draft the player.
+                targetLateral = GameMath.lerp(targetLateral, player.lateral, 0.42)
+            case .cautious:
+                // Yield a lane rather than barge.
+                if abs(player.lateral - racer.lateral) < 2.1 {
+                    targetLateral += (racer.lateral >= player.lateral ? 1 : -1) * 1.15
+                }
+            case .hoarder, .none:
+                break
+            }
         }
 
         // Hazards and peels ahead: steer to the nearer side that clears them. How far ahead a
@@ -618,6 +684,10 @@ final class GameEngine: ObservableObject {
         let sample = path.sample(at: racers[i].progress)
         var pull = cornerPull(for: racers[i], sample: sample)
         if ice { pull *= 1.4 }
+        // Carving into the bend (steering against the outward pull) bites harder on snow.
+        if !ice && !racers[i].airborne && racers[i].stunned <= 0 && input * pull < 0 {
+            drag += Tuning.carveGrip * min(1, abs(input))
+        }
         racers[i].lateralVel += (input * accel + pull) * dt
         racers[i].lateralVel *= exp(-drag * dt)
         racers[i].lateral += racers[i].lateralVel * dt
@@ -631,8 +701,9 @@ final class GameEngine: ObservableObject {
             if racers[i].lateralVel < -0.5 { scrapeWall(index: i) }
             racers[i].lateralVel *= -0.3
         }
-        racers[i].roll = GameMath.damp(racers[i].roll, -input * 0.45 - racers[i].lateralVel * 0.02, lambda: 8, dt: dt)
-        racers[i].yaw = sample.heading
+        let lean = -input * Tuning.leanInput - racers[i].lateralVel * Tuning.leanSlide
+        racers[i].roll = GameMath.damp(racers[i].roll, lean, lambda: Tuning.leanLambda, dt: dt)
+        racers[i].yaw = sample.heading + GameMath.clamp(racers[i].lateralVel * Tuning.yawFromSlide, -0.28, 0.28)
     }
 
     /// Grinding along the wall bleeds speed for a moment after contact.
@@ -661,18 +732,35 @@ final class GameEngine: ObservableObject {
         var maxSpeed: Float = 13.5 + sample.slope * 22
         maxSpeed *= racers[i].skill
         if !racers[i].isPlayer, let player = playerRacer {
-            maxSpeed *= rubberBand(lead: racers[i].progress - player.progress)
+            maxSpeed *= Tuning.rubberBandFactor(
+                lead: racers[i].progress - player.progress,
+                rivalProgress: racers[i].progress
+            )
         }
-        if racers[i].rocketTime > 0 { maxSpeed *= Tuning.rocketSpeedMultiplier }
-        if racers[i].boostTime > 0 { maxSpeed *= Tuning.boostSpeedMultiplier }
+        let rocket = racers[i].rocketTime > 0
+        let boosting = racers[i].boostTime > 0
+        if rocket && boosting {
+            maxSpeed *= max(Tuning.rocketSpeedMultiplier, Tuning.boostSpeedMultiplier)
+        } else if rocket {
+            maxSpeed *= Tuning.rocketSpeedMultiplier
+        } else if boosting {
+            maxSpeed *= Tuning.boostSpeedMultiplier
+        }
         if racers[i].stunned > 0 { maxSpeed *= Tuning.stunSpeedFactor }
         if racers[i].scrape > 0 { maxSpeed *= Tuning.wallScrapeSpeed }
         if isOnIce(racers[i]) { maxSpeed *= 1.06 }
+        if !racers[i].airborne && racers[i].stunned <= 0 && abs(sample.curvature) > 0.004 {
+            let inside = GameMath.saturate(-sample.curvature * racers[i].lateral * 0.8)
+            let settled = GameMath.saturate(1 - abs(racers[i].lateralVel) / 8)
+            maxSpeed *= 1 + Tuning.lineSpeedBonus * inside * settled
+        }
 
         var accel: Float = 10 + sample.slope * 16
         if racers[i].airborne { accel *= 0.35 }
         racers[i].speed += accel * dt
-        racers[i].speed = min(racers[i].speed, maxSpeed)
+        racers[i].overspeed = max(0, racers[i].overspeed - Tuning.overspeedDecay * dt)
+        let ceiling = min(Tuning.hardSpeedCap, maxSpeed + racers[i].overspeed)
+        racers[i].speed = min(racers[i].speed, ceiling)
 
         // The inside of a bend is a shorter road: a sled hugging it covers the same stretch of
         // track with less distance. Positive curvature is a left turn and the inside is the
@@ -712,16 +800,6 @@ final class GameEngine: ObservableObject {
         }
     }
 
-    /// Keeps the pack together without stealing the win: a rival far ahead of the player
-    /// eases off, one far behind catches up. It blends smoothly, so nobody lurches when
-    /// they cross a threshold.
-    private func rubberBand(lead: Float) -> Float {
-        if lead >= 0 {
-            return 1 - Tuning.bandSlow * GameMath.smoothstep(0.02, 0.10, lead)
-        }
-        return 1 + Tuning.bandCatchUp * GameMath.smoothstep(0.02, 0.14, -lead)
-    }
-
     private func tryBoost(index i: Int, dt: Float) {
         guard racers[i].turbo > 0.02, racers[i].stunned <= 0 else { return }
         racers[i].turbo = max(0, racers[i].turbo - Tuning.boostDrain * dt)
@@ -749,6 +827,13 @@ final class GameEngine: ObservableObject {
             should = r.progress > 0.72 || r.rocketTime > 0
         case .none:
             should = r.progress > 0.4
+        }
+        if let player = playerRacer, !player.finished,
+           player.boostTime > 0,
+           player.progress < r.progress,
+           r.progress - player.progress < 0.04 {
+            // Answer a player who is boosting up to their bumper — cautious still holds.
+            if r.personality != .cautious { should = true }
         }
         if should { tryBoost(index: i, dt: dt) }
     }
@@ -850,6 +935,8 @@ final class GameEngine: ObservableObject {
         case .crystal:
             racers[i].crystals += 1
             racers[i].turbo = min(1, racers[i].turbo + Tuning.crystalFuel)
+            racers[i].speed += Tuning.crystalTick
+            racers[i].trailBoost = max(racers[i].trailBoost, 0.14)
             if racers[i].isPlayer {
                 AudioHaptics.shared.collect()
                 bumpCombo("Crystal")
@@ -857,21 +944,39 @@ final class GameEngine: ObservableObject {
         case .rocket:
             racers[i].rocketTime = 1.8
             racers[i].speed += 8
+            racers[i].overspeed = max(racers[i].overspeed, Tuning.rocketBurst)
             racers[i].trailBoost = 1.8
             racers[i].boostTime = max(racers[i].boostTime, 1.8)
-            if racers[i].isPlayer { AudioHaptics.shared.power(); toast("Rocket!") }
+            if racers[i].isPlayer {
+                AudioHaptics.shared.power()
+                toast("Rocket!")
+                fovKick = max(fovKick, 0.7)
+                cameraShake = max(cameraShake, 0.28)
+            }
         case .magnet:
             racers[i].magnetTime = 6
-            if racers[i].isPlayer { AudioHaptics.shared.power(); toast("Magnet!") }
+            if racers[i].isPlayer {
+                AudioHaptics.shared.power()
+                toast("Magnet!")
+                fovKick = max(fovKick, 0.25)
+            }
         case .ghost:
             racers[i].ghostTime = 4
-            if racers[i].isPlayer { AudioHaptics.shared.power(); toast("Ghost!") }
+            if racers[i].isPlayer {
+                AudioHaptics.shared.power()
+                toast("Ghost!")
+                fovKick = max(fovKick, 0.25)
+            }
         case .banana:
             racers[i].bananaArmed = true
             if racers[i].isPlayer { AudioHaptics.shared.power(); toast("Peel ready") }
         case .flare:
             racers[i].flareTime = 8
-            if racers[i].isPlayer { AudioHaptics.shared.power(); toast("Flare!") }
+            if racers[i].isPlayer {
+                AudioHaptics.shared.power()
+                toast("Flare!")
+                fovKick = max(fovKick, 0.25)
+            }
         default:
             break
         }
@@ -888,13 +993,19 @@ final class GameEngine: ObservableObject {
                     racers[i].trailBoost = 0.5
                     racers[i].boostTime = max(racers[i].boostTime, 0.5)
                     racers[i].airborne = true
-                    if racers[i].isPlayer { AudioHaptics.shared.whoosh() }
+                    if racers[i].isPlayer {
+                        AudioHaptics.shared.whoosh()
+                        fovKick = max(fovKick, 0.35)
+                    }
                 } else if e.definition.kind == .turboPad {
-                    racers[i].speed += 7.5
+                    racers[i].speed += 5.2
+                    racers[i].overspeed = max(racers[i].overspeed, Tuning.padBurst)
                     racers[i].trailBoost = max(racers[i].trailBoost, Tuning.padBoostTime)
                     racers[i].boostTime = max(racers[i].boostTime, Tuning.padBoostTime)
                     if racers[i].isPlayer {
                         AudioHaptics.shared.boost()
+                        fovKick = max(fovKick, 0.55)
+                        cameraShake = max(cameraShake, 0.22)
                     }
                 }
             }
@@ -1065,6 +1176,17 @@ final class GameEngine: ObservableObject {
         if avalancheActive, let player, let path, !avalancheBuried.contains(player.id) {
             gap = max(0, (player.progress - avalancheFront) * path.length)
         }
+        let powered = (player?.boostTime ?? 0) > 0 || (player?.rocketTime ?? 0) > 0
+        let boosting = powered || (player?.trailBoost ?? 0) > 0.16
+        let speed = player?.speed ?? 0
+        let band: SpeedBand
+        if speed >= Tuning.turboSpeed {
+            band = .turbo
+        } else if powered || speed >= Tuning.pushSpeed {
+            band = .push
+        } else {
+            band = .cruise
+        }
         let snap = HUDSnapshot(
             place: playerPlace,
             fieldSize: racers.count,
@@ -1097,7 +1219,9 @@ final class GameEngine: ObservableObject {
             parTime: level?.parTime ?? 0,
             crystalGoal: level?.crystalStar ?? 0,
             courseNumber: (level?.id.order ?? 0) + 1,
-            ghostGap: ghostGapSeconds()
+            ghostGap: ghostGapSeconds(),
+            speedBand: band,
+            boosting: boosting
         )
         DispatchQueue.main.async { [weak self] in
             self?.hud = snap
@@ -1118,14 +1242,30 @@ final class GameEngine: ObservableObject {
         // Faster = lower, closer and wider, so speed reads on screen; boost punches the FOV.
         let rush = GameMath.saturate((player.speed - 11) / 9)
         let boosting = player.trailBoost > 0 || player.rocketTime > 0
-        let back: Float = (player.rocketTime > 0 ? 7.4 : 6.4) - rush * 0.7
-        let up: Float = 3.15 - rush * 0.45
-        let desiredEye = pos - sample.tangent * back + sample.normal * up
-        let desiredLook = pos + sample.tangent * 9.5 + sample.normal * 0.35
-        cameraEye = GameMath.damp3(cameraEye, desiredEye, lambda: 7.5, dt: dt)
-        cameraLook = GameMath.damp3(cameraLook, desiredLook, lambda: 9, dt: dt)
-        let targetFOV: Float = 50 + rush * 6 + (boosting ? 9 : 0)
-        cameraFOV = GameMath.damp(cameraFOV, targetFOV, lambda: boosting ? 7 : 4, dt: dt)
+        let finished = phase == .finished
+        let back: Float = finished ? 8.6 : ((player.rocketTime > 0 ? 7.4 : 6.4) - rush * 0.7)
+        let up: Float = finished ? 3.9 : (3.15 - rush * 0.45)
+        var desiredEye = pos - sample.tangent * back + sample.normal * up
+        var desiredLook = pos + sample.tangent * (finished ? 7.2 : 9.5) + sample.normal * (finished ? 0.6 : 0.35)
+        // Lean the chase cam with the sled so the carve is readable.
+        desiredEye += sample.binormal * (-player.roll) * 0.45
+        desiredLook += sample.binormal * (-player.roll) * 1.15
+        cameraEye = GameMath.damp3(cameraEye, desiredEye, lambda: finished ? 4.5 : 7.5, dt: dt)
+        cameraLook = GameMath.damp3(cameraLook, desiredLook, lambda: finished ? 5.5 : 9, dt: dt)
+        let targetFOV: Float = (finished ? 58 : 50) + rush * 6 + (boosting ? 8 : 0) + fovKick * 9
+        cameraFOV = GameMath.damp(cameraFOV, targetFOV, lambda: boosting || fovKick > 0.05 ? 8 : 4, dt: dt)
+    }
+
+    /// When the stun ends the sled gets a short re-entry shove so a crash is a beat, not a stall.
+    private func recoverPlayerIfNeeded() {
+        guard let player = playerRacer, let i = racers.firstIndex(where: \.isPlayer) else { return }
+        if playerWasStunned && player.stunned <= 0 && phase == .racing {
+            racers[i].speed += Tuning.recoverPush
+            racers[i].trailBoost = max(racers[i].trailBoost, 0.22)
+            fovKick = max(fovKick, 0.28)
+            AudioHaptics.shared.whoosh()
+        }
+        playerWasStunned = player.stunned > 0
     }
 
     // MARK: - Combo and near misses
@@ -1140,6 +1280,10 @@ final class GameEngine: ObservableObject {
             }
             toast("\(reason) x\(combo)")
             AudioHaptics.shared.comboHit()
+            if combo == 3 || combo == 6 || combo == 9 {
+                cameraShake = max(cameraShake, 0.42)
+                fovKick = max(fovKick, 0.5)
+            }
         }
     }
 
@@ -1158,11 +1302,15 @@ final class GameEngine: ObservableObject {
             let ds = (r.progress - entity.definition.progress) * path.length
             let dl = abs(r.lateral - entity.liveLateral)
             let inner = entity.definition.radius + 0.65
-            let outer = entity.definition.radius + 2.2
-            if ds > 0.12 && ds < 1.85 && dl > inner && dl < outer {
+            let outer = entity.definition.radius + 2.45
+            if ds > 0.12 && ds < 1.95 && dl > inner && dl < outer {
                 if nearMissed.insert(entity.definition.id).inserted {
                     nearMisses += 1
                     bumpCombo("Near miss")
+                    cameraShake = max(cameraShake, 0.38)
+                    fovKick = max(fovKick, 0.4)
+                    landingPulse = max(landingPulse, 0.35)
+                    AudioHaptics.shared.nearMiss()
                 }
             }
         }
@@ -1243,6 +1391,8 @@ final class GameEngine: ObservableObject {
                 toast("Shortcut!")
                 bumpCombo("Cut")
                 AudioHaptics.shared.whoosh()
+                fovKick = max(fovKick, 0.45)
+                cameraShake = max(cameraShake, 0.2)
             }
         }
     }

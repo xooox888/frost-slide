@@ -289,14 +289,25 @@ enum WorldFactory {
         let root = Entity()
         let disc = RKEntity.model(
             RKMesh.cylinder(radius: 1.15, height: 0.06),
-            RKMat.pbr(SIMD3(0.2, 0.85, 1.0), roughness: 0.2, emissive: SIMD3(0.15, 0.55, 0.8))
+            RKMat.pbr(SIMD3(0.15, 0.92, 1.0), roughness: 0.16, emissive: SIMD3(0.22, 0.72, 1.0))
         )
         disc.position.y = 0.05
+        disc.name = "turboGlow"
         root.addChild(disc)
-        let chev = RKEntity.model(RKMesh.cone(bottomRadius: 0.35, height: 0.7), RKMat.pbr(SIMD3(1, 1, 1), roughness: 0.2))
+        let ring = RKEntity.model(
+            RKMesh.cylinder(radius: 1.38, height: 0.03),
+            RKMat.pbr(SIMD3(1.0, 0.95, 0.55), roughness: 0.18, emissive: SIMD3(0.55, 0.42, 0.08))
+        )
+        ring.position.y = 0.04
+        root.addChild(ring)
+        let chev = RKEntity.model(RKMesh.cone(bottomRadius: 0.32, height: 0.62), RKMat.pbr(SIMD3(1, 1, 1), roughness: 0.15, emissive: SIMD3(0.35, 0.35, 0.35)))
         chev.orientation = simd_quatf(angle: Float.pi / 2, axis: [1, 0, 0])
-        chev.position = [0, 0.12, 0]
+        chev.position = [0, 0.14, -0.12]
         root.addChild(chev)
+        let chev2 = RKEntity.model(RKMesh.cone(bottomRadius: 0.26, height: 0.5), RKMat.pbr(SIMD3(1, 1, 1), roughness: 0.15, emissive: SIMD3(0.25, 0.25, 0.25)))
+        chev2.orientation = simd_quatf(angle: Float.pi / 2, axis: [1, 0, 0])
+        chev2.position = [0, 0.14, 0.38]
+        root.addChild(chev2)
         return root
     }
 
