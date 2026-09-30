@@ -40,6 +40,8 @@ struct Racer {
     var scrape: Float = 0
     /// Crashes, splashes and avalanche burials so far.
     var hits: Int = 0
+    /// Extra metres per second allowed above the current cap, decaying after a pad or rocket punch.
+    var overspeed: Float = 0
 }
 
 struct LiveEntity {

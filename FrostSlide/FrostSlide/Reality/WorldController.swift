@@ -159,6 +159,20 @@ final class WorldController {
                 let pulse = 1 + sin(spinTime * 5) * 0.08
                 entity.scale = SIMD3(repeating: pulse)
             }
+            if live.definition.kind == .turboPad || live.definition.kind == .shortcut {
+                entity.scale = SIMD3(repeating: 1 + sin(spinTime * 8 + live.phase) * 0.08)
+            }
+            // Upcoming hazards breathe so the next threat telegraphs without a new HUD widget.
+            if CollisionClass.solidHazards.contains(live.definition.kind),
+               live.definition.radius > 0,
+               let player = engine.playerRacer,
+               let path = engine.path {
+                let dp = (live.definition.progress - player.progress) * path.length
+                if dp > 0 && dp < 16 {
+                    let closeness = 1 - dp / 16
+                    entity.scale = SIMD3(repeating: 1 + sin(spinTime * 9) * 0.055 * closeness)
+                }
+            }
         }
 
         syncPeels(engine: engine, path: path)
@@ -181,8 +195,9 @@ final class WorldController {
             let sample = path.sample(at: player.progress)
             var sprayRate: Float = 0
             if !player.airborne && engine.phase == .racing {
-                sprayRate = max(0, player.speed - 12) * 1.5 + abs(player.lateralVel) * 5
-                if player.trailBoost > 0 || player.rocketTime > 0 { sprayRate += 26 }
+                sprayRate = max(0, player.speed - 12) * 1.5 + abs(player.lateralVel) * 6
+                if player.trailBoost > 0 || player.rocketTime > 0 { sprayRate += 32 }
+                if abs(player.roll) > 0.2 { sprayRate += 8 }
             }
             spray?.tick(dt: dt, at: pos, forward: sample.tangent, side: sample.binormal, rate: sprayRate)
             snow.tick(dt: dt, around: engine.cameraEye)

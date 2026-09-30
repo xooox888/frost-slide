@@ -48,6 +48,16 @@ If SPM cannot resolve, File → Add Package Dependencies and paste the package's
 
 Unlock-all exists only in **DEBUG** builds. Release / TestFlight / App Store binaries ignore it.
 
+### Feel playtest (Xcode / iPhone)
+
+These are the beats this gameplay pass is meant to change. Run `FrostSlide/FrostSlide.xcodeproj` on an iPhone simulator or device (this Linux environment cannot compile or run the RealityKit app).
+
+1. **Village Dash, first 10 seconds.** Drag small then full-lock: the disc should lean and the camera should roll with it. Release and the slide should settle quickly on snow, not drift. Ice later in Ice Cave / Crystal Grotto should still feel slippery.
+2. **Speed bands.** Cruise is unmarked cyan-white. Hold BOOST and the HUD should flip to **PUSH** with a glowing BOOST button and speed lines. A turbo pad or rocket should punch **TURBO**, widen FOV, and kick a hotter ice trail — then decay, not keep climbing.
+3. **Skill juice.** Graze a snowman/crate for a near-miss: combo chip, camera punch, haptic. Chain crystals to x3 / x6 / x9 for a harder punch. Crash once: short stun, then a re-entry shove (not a long stall). Cross the line: camera pulls back for the flourish.
+4. **Rivals.** Aggressive sleds hunt the inside and answer your boost; cautious ones take a wider line and yield. Mid-race packs stay close. In the last ~15% a rival who was far behind should not warp past you. A clean Village Dash should still feel winnable; Icefall / Carnival should still be a fight.
+5. **Keep intact.** REFILL (rewarded turbo, once per race), banners, interstitials after results, Peel, ghost, avalanche rumble, daily challenge, and Remove Ads.
+
 ### Stars
 
 Finishing is worth 1 star. Bonus points add up to two more:

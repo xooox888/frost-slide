@@ -31,6 +31,7 @@ final class AudioHaptics {
     func go() { note("go") }
     func whoosh() { note("whoosh") }
     func comboHit() { note("combo") }
+    func nearMiss() { note("nearmiss") }
     func power() { note("power") }
     func tap(_ style: HapticStyle) { note("tap") }
 }

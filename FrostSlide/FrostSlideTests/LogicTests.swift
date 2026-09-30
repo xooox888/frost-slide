@@ -46,4 +46,21 @@ final class LogicTests: XCTestCase {
         // The shipped placeholder must keep analytics off until a real App ID is pasted in.
         XCTAssertEqual(AnalyticsConfig.isConfigured, !AnalyticsConfig.appID.hasPrefix("YOUR-"))
     }
+
+    func testRubberBandKeepsTheFinishEarned() {
+        let mid = Tuning.rubberBandFactor(lead: -0.07, rivalProgress: 0.4)
+        let late = Tuning.rubberBandFactor(lead: -0.07, rivalProgress: 0.94)
+        let far = Tuning.rubberBandFactor(lead: -0.22, rivalProgress: 0.4)
+        let lead = Tuning.rubberBandFactor(lead: 0.09, rivalProgress: 0.5)
+        XCTAssertGreaterThan(mid, 1.02)
+        XCTAssertLessThan(late, mid)
+        XCTAssertLessThan(far, mid)
+        XCTAssertLessThan(lead, 1)
+    }
+
+    func testSpeedBandsAreNamedForTheHUD() {
+        XCTAssertEqual(SpeedBand.cruise.title, "CRUISE")
+        XCTAssertEqual(SpeedBand.push.title, "PUSH")
+        XCTAssertEqual(SpeedBand.turbo.title, "TURBO")
+    }
 }

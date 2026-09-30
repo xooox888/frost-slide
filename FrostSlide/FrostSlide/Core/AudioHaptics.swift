@@ -83,6 +83,11 @@ final class AudioHaptics {
         tap(.light)
     }
 
+    func nearMiss() {
+        play("whoosh", volume: 0.55)
+        tap(.medium)
+    }
+
     func power() {
         play("power", volume: 0.75)
         tap(.medium)

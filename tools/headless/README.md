@@ -54,7 +54,7 @@ real players.
   (then `calibrate`) if you change speeds, the boost economy, crash costs or crystal placement.
 * **Avalanche pace.** `avalanche` prints how often each bot is buried and how close the wall
   gets. Novices should occasionally be caught from mid-game on; good players almost never.
-* **Balance constants** all live in `Tuning` (`Engine/GameEngine.swift`).
+* **Balance constants** all live in `Tuning` (`Engine/GameEngine.swift`). Rubber-band fairness is `Tuning.rubberBandFactor`; stacked boost/rocket is capped by `hardSpeedCap`.
 
 ## Self-tests
 

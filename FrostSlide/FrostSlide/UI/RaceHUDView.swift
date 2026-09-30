@@ -76,9 +76,19 @@ struct RaceHUDView: View {
                         .font(FrostTheme.captionFont)
                         .foregroundStyle(.white)
                 }
-                Text("\(hud.speedKph) km/h")
-                    .font(.custom("AvenirNext-DemiBold", size: 11))
-                    .foregroundStyle(.white.opacity(0.8))
+                HStack(spacing: 6) {
+                    Text("\(hud.speedKph) km/h")
+                        .font(.custom("AvenirNext-DemiBold", size: 11))
+                        .foregroundStyle(speedBandColor)
+                    Text(hud.speedBand.title)
+                        .font(.custom("AvenirNext-Heavy", size: 9))
+                        .foregroundStyle(speedBandColor)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(speedBandColor.opacity(0.22)))
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(hud.speedKph) kilometers per hour, \(hud.speedBand.title.lowercased())")
             }
             .hudPlate()
             Button(action: onPause) {
@@ -213,7 +223,7 @@ struct RaceHUDView: View {
                 .allowsHitTesting(true)
                 .accessibilityLabel("Drop banana peel")
             }
-            HoldButton(title: "BOOST", color: FrostTheme.berry, changed: boostChanged)
+            HoldButton(title: "BOOST", color: FrostTheme.berry, glowing: hud.boosting, changed: boostChanged)
                 .allowsHitTesting(true)
         }
     }
@@ -239,10 +249,18 @@ struct RaceHUDView: View {
             .foregroundStyle(FrostTheme.ink)
     }
 
+    private var speedBandColor: Color {
+        switch hud.speedBand {
+        case .cruise: return .white.opacity(0.8)
+        case .push: return Color.cyan
+        case .turbo: return FrostTheme.ochre
+        }
+    }
+
     /// The chain multiplier, filling back from full as the window to keep it alive closes.
     private var comboChip: some View {
         Text("x\(hud.combo)")
-            .font(.custom("AvenirNext-Heavy", size: 11))
+            .font(.custom("AvenirNext-Heavy", size: hud.combo >= 5 ? 13 : 11))
             .foregroundStyle(FrostTheme.ink)
             .padding(.horizontal, 9)
             .padding(.vertical, 3)
@@ -251,12 +269,13 @@ struct RaceHUDView: View {
                     Capsule().fill(FrostTheme.ochre.opacity(0.4))
                     GeometryReader { geo in
                         Capsule()
-                            .fill(FrostTheme.ochre)
+                            .fill(hud.combo >= 5 ? FrostTheme.berry : FrostTheme.ochre)
                             .frame(width: geo.size.width * CGFloat(GameMath.saturate(hud.comboFraction)))
                     }
                 }
             )
             .clipShape(Capsule())
+            .scaleEffect(hud.combo >= 5 ? 1.12 : 1)
             .accessibilityLabel("Combo times \(hud.combo)")
     }
 
@@ -348,6 +367,7 @@ private extension View {
 struct HoldButton: View {
     var title: String
     var color: Color
+    var glowing: Bool = false
     var changed: (Bool) -> Void
     @State private var pressed = false
 
@@ -361,8 +381,12 @@ struct HoldButton: View {
                     LinearGradient(colors: [color, color.opacity(0.75)], startPoint: .top, endPoint: .bottom)
                 )
             )
-            .shadow(color: color.opacity(0.4), radius: 10, y: 5)
-            .scaleEffect(pressed ? 0.94 : 1)
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(glowing ? 0.75 : 0), lineWidth: 3)
+            )
+            .shadow(color: color.opacity(glowing ? 0.7 : 0.4), radius: glowing ? 16 : 10, y: 5)
+            .scaleEffect(pressed ? 0.94 : (glowing ? 1.03 : 1))
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in

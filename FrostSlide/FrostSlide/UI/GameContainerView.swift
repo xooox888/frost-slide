@@ -20,7 +20,12 @@ struct GamePlaySurface: View {
             RealityKitRaceView(engine: engine)
                 .ignoresSafeArea()
 
-            SpeedLinesOverlay(speedKph: engine.hud.speedKph, time: engine.hud.time)
+            SpeedLinesOverlay(
+                speedKph: engine.hud.speedKph,
+                band: engine.hud.speedBand,
+                boosting: engine.hud.boosting,
+                time: engine.hud.time
+            )
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
@@ -65,14 +70,23 @@ struct GamePlaySurface: View {
     }
 }
 
-/// Edge streaks that fade in above cruising speed so boosts feel fast.
+/// Edge streaks that fade in on push / turbo so the speed bands read on screen.
 struct SpeedLinesOverlay: View {
     let speedKph: Int
+    var band: SpeedBand = .cruise
+    var boosting: Bool = false
     let time: TimeInterval
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let intensity = min(1, max(0, (Double(speedKph) - 64) / 26))
+        let fromSpeed = min(1, max(0, (Double(speedKph) - 64) / 26))
+        let fromBand: Double
+        switch band {
+        case .cruise: fromBand = boosting ? 0.22 : 0
+        case .push: fromBand = 0.55
+        case .turbo: fromBand = 0.95
+        }
+        let intensity = max(fromSpeed, fromBand)
         Canvas { context, size in
             guard intensity > 0, !reduceMotion else { return }
             let center = CGPoint(x: size.width / 2, y: size.height * 0.46)
